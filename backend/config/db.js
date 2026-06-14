@@ -3,14 +3,48 @@ const mongoose = require('mongoose');
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/ai-recon-db', {
-      serverSelectionTimeoutMS: 5000 // 5 seconds timeout before failure
+      // Connection timeout options
+      serverSelectionTimeoutMS: 15000,      // 15 seconds to select server
+      socketTimeoutMS: 45000,               // 45 seconds for socket operations
+      connectTimeoutMS: 10000,              // 10 seconds initial connection
+      
+      // Connection pooling
+      maxPoolSize: 10,                      // Max connections in pool
+      minPoolSize: 2,                       // Min connections to maintain
+      
+      // Retry settings
+      retryWrites: true,                    // Enable retry writes
+      retryReads: true,                     // Enable retry reads
+      maxCommitTimeMS: 10000,               // Max commit time
+      
+      // Family and DNS
+      family: 4,                            // Use IPv4
+      
+      // Other options
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverMonitoringMode: 'auto'
     });
+    
     console.log(`🚀 MongoDB Connected: ${conn.connection.host}`);
+    console.log(`📊 Database: ${conn.connection.db.name}`);
+    
+    // Handle connection events
+    mongoose.connection.on('disconnected', () => {
+      console.warn('⚠️ MongoDB disconnected');
+    });
+    
+    mongoose.connection.on('error', (err) => {
+      console.error(`❌ MongoDB error: ${err.message}`);
+    });
+    
+    return conn;
   } catch (error) {
     console.error(`❌ Database Connection Error: ${error.message}`);
-    console.log('⚠️ Falling back to local mock DB operations or waiting for retry...');
-    // We do not call process.exit(1) so that the server remains alive for presentation
-    // even if MongoDB is not running locally.
+    console.log('⚠️ Retrying connection in 5 seconds...');
+    
+    // Retry connection after 5 seconds
+    setTimeout(connectDB, 5000);
   }
 };
 

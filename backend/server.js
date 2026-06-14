@@ -50,6 +50,28 @@ app.get('/', (req, res) => {
   });
 });
 
+// Health Check Endpoint
+app.get('/health', (req, res) => {
+  const mongoStatus = require('mongoose').connection.readyState;
+  // 0: disconnected, 1: connected, 2: connecting, 3: disconnecting
+  const mongoStatusMap = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+  };
+  
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    database: {
+      status: mongoStatusMap[mongoStatus],
+      connected: mongoStatus === 1
+    },
+    uptime: process.uptime()
+  });
+});
+
 // 5. Global Exception Handler Middleware
 app.use(errorHandler);
 

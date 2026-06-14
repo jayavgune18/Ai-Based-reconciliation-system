@@ -4,6 +4,13 @@ const errorHandler = (err, req, res, next) => {
   let error = { ...err };
   error.message = err.message;
 
+  // MongoDB Connection Timeout
+  if (err.name === 'MongooseError' || err.message.includes('buffering timed out')) {
+    const message = 'Database connection timeout. Please try again.';
+    error = new Error(message);
+    res.statusCode = 503;
+  }
+
   // Mongoose Bad ObjectId
   if (err.name === 'CastError') {
     const message = `Resource not found with id of ${err.value}`;
