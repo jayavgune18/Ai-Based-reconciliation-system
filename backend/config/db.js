@@ -15,15 +15,9 @@ const connectDB = async () => {
       // Retry settings
       retryWrites: true,                    // Enable retry writes
       retryReads: true,                     // Enable retry reads
-      maxCommitTimeMS: 10000,               // Max commit time
       
       // Family and DNS
-      family: 4,                            // Use IPv4
-      
-      // Other options
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverMonitoringMode: 'auto'
+      family: 4                             // Use IPv4
     });
     
     console.log(`🚀 MongoDB Connected: ${conn.connection.host}`);
