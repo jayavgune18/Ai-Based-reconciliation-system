@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../services/api';
 import { History, Shield, Eye, Calendar, HardDrive } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -15,7 +15,7 @@ export const AuditLogs = () => {
         return;
       }
       try {
-        const res = await axios.get('/api/dashboard/audit-logs');
+        const res = await apiClient.get('/api/dashboard/audit-logs');
         if (res.data.success) {
           setLogs(res.data.logs);
         }

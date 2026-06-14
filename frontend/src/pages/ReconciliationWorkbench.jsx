@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../services/api';
 import { 
   FileSpreadsheet, Upload, Download, CheckCircle, AlertTriangle, HelpCircle, FileText, Plus, X, Play
 } from 'lucide-react';
@@ -32,7 +32,7 @@ export const ReconciliationWorkbench = () => {
   // Fetch jobs list
   const fetchJobs = async () => {
     try {
-      const res = await axios.get('/api/reconciliation/jobs');
+      const res = await apiClient.get('/api/reconciliation/jobs');
       if (res.data.success) {
         setJobs(res.data.jobs);
         if (res.data.jobs.length > 0 && !selectedJobId) {
@@ -54,7 +54,7 @@ export const ReconciliationWorkbench = () => {
       if (!selectedJobId) return;
       setLoadingMatches(true);
       try {
-        const res = await axios.get(`/api/reconciliation/matches/${selectedJobId}`);
+        const res = await apiClient.get(`/api/reconciliation/matches/${selectedJobId}`);
         if (res.data.success) {
           setMatches(res.data.matches);
         }
@@ -86,7 +86,7 @@ export const ReconciliationWorkbench = () => {
     setUploadProgress(20);
 
     try {
-      const res = await axios.post('/api/reconciliation/upload', formData, {
+      const res = await apiClient.post('/api/reconciliation/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -127,7 +127,7 @@ export const ReconciliationWorkbench = () => {
     setOcrResult(null);
 
     try {
-      const res = await axios.post('/api/reconciliation/ocr', formData, {
+      const res = await apiClient.post('/api/reconciliation/ocr', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       if (res.data.success) {
@@ -148,7 +148,7 @@ export const ReconciliationWorkbench = () => {
     }
 
     try {
-      const res = await axios.put(`/api/reconciliation/matches/${resolutionTarget._id}/resolve`, {
+      const res = await apiClient.put(`/api/reconciliation/matches/${resolutionTarget._id}/resolve`, {
         status,
         actionNotes: resolutionNotes
       });

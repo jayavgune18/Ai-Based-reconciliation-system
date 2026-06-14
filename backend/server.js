@@ -25,9 +25,10 @@ app.use(helmet({
   crossOriginResourcePolicy: false // Allows loading local file directories in dev if needed
 }));
 app.use(cors({
-  origin: '*', // Customize to white-list client domains in production
+  origin: process.env.CORS_ORIGIN || '*', // Use environment variable for CORS origin
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

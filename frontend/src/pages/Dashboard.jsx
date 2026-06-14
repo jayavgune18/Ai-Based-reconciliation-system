@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../services/api';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
@@ -26,7 +26,7 @@ export const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const statsRes = await axios.get('/api/dashboard/stats');
+        const statsRes = await apiClient.get('/api/dashboard/stats');
         if (statsRes.data.success) {
           setStats(statsRes.data.stats);
           setChartData(statsRes.data.chartData);
@@ -34,7 +34,7 @@ export const Dashboard = () => {
         
         // Fetch fraud alerts if user is admin
         if (user?.role === 'admin') {
-          const fraudRes = await axios.get('/api/dashboard/fraud-alerts');
+          const fraudRes = await apiClient.get('/api/dashboard/fraud-alerts');
           if (fraudRes.data.success) {
             setFraudCount(fraudRes.data.count);
           }

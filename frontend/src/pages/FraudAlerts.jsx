@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../services/api';
 import { ShieldAlert, AlertTriangle, Info, Clock, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -15,7 +15,7 @@ export const FraudAlerts = () => {
         return;
       }
       try {
-        const res = await axios.get('/api/dashboard/fraud-alerts');
+        const res = await apiClient.get('/api/dashboard/fraud-alerts');
         if (res.data.success) {
           setAlerts(res.data.alerts);
         }
