@@ -6,29 +6,9 @@ Designed and optimized to be suitable for Final Year Engineering projects, place
 
 ---
 
-## 🚀 Key Features
+## 🖥️ Live Demo
 
-### 1. **Hybrid AI Matching Engine**
-- Calculates multi-pass transaction matching:
-  1. **Deterministic filter**: Scans matching external Transaction reference IDs and perfect Amount/Date fits.
-  2. **Character N-Gram Cosine Similarity**: Measures spelling and word arrangement similarity (e.g. `AMAZONPAY INDIA` ↔ `Amazon Pay`).
-  3. **Jaro-Winkler & Levenshtein Distances**: Provides highly accurate string proximity scores.
-- Assigns a dynamic **Confidence Score %** and compiles natural-language **AI Explanations** for match validations.
-
-### 2. **Continuous Risk Heuristics (Fraud Detection)**
-- **Velocity Spikes**: Flags multiple identical debit transactions occurring within a 1-hour window.
-- **Double Debits**: Alarms users if the bank has processed duplicate transfers within a 24-hour timeframe.
-- **Statistical Outliers**: Employs standard deviation scoring (Z-Score > 2.5) to isolate extreme anomalous transaction amounts dynamically.
-
-### 3. **Structured Ingestion & Processing**
-- Features a dropzone to drag-and-drop CSV or Excel sheets.
-- **Dynamic Headers Normalizer**: Auto-detects and aligns mismatching column headers (e.g., matching "UTR No", "Ref ID", or "Transaction No" to the schema's `transactionId`).
-- **Invoice OCR extraction**: Mock pipeline demonstrating Tesseract.js text extraction from invoice receipts.
-
-### 4. **Enterprise Audit & Exporters**
-- Downloads fully compiled **PDF Reconciliation Reports** containing aggregate statistics, job statuses, and ledger matching pairs.
-- Exports tabular **multi-sheet Excel files** for bookkeeping.
-- Includes a strict administrative **Audit Log** tracking all user actions.
+Check out the live portfolio here: [🔗 View Portfolio](https://jay-avgune.netlify.app/)
 
 ---
 
@@ -63,7 +43,54 @@ ai-recon-system/
     │   └── App.jsx         # Routes definition
     ├── tailwind.config.js
     └── package.json
+
 ```
+
+## 📸 Portfolio Screenshots
+
+### Login
+![Login](./public/images/Login)
+
+### Dashboard
+![ Dashboard ](./public/images/Dashboard)
+
+### Reconciliation Workbench
+![Reconciliation Workbench](./public/images/ReconciliationWorkbench)
+
+### UploadFile
+![UploadFile](./public/images/UploadFile.png)
+
+### FraudAlerts
+![FraudAlerts](./public/images/FraudAlerts.png)
+
+### Audit Logs
+![Audit Logs](./public/images/AuditLogs.png)
+
+---
+
+## 🚀 Key Features
+
+### 1. **Hybrid AI Matching Engine**
+- Calculates multi-pass transaction matching:
+  1. **Deterministic filter**: Scans matching external Transaction reference IDs and perfect Amount/Date fits.
+  2. **Character N-Gram Cosine Similarity**: Measures spelling and word arrangement similarity (e.g. `AMAZONPAY INDIA` ↔ `Amazon Pay`).
+  3. **Jaro-Winkler & Levenshtein Distances**: Provides highly accurate string proximity scores.
+- Assigns a dynamic **Confidence Score %** and compiles natural-language **AI Explanations** for match validations.
+
+### 2. **Continuous Risk Heuristics (Fraud Detection)**
+- **Velocity Spikes**: Flags multiple identical debit transactions occurring within a 1-hour window.
+- **Double Debits**: Alarms users if the bank has processed duplicate transfers within a 24-hour timeframe.
+- **Statistical Outliers**: Employs standard deviation scoring (Z-Score > 2.5) to isolate extreme anomalous transaction amounts dynamically.
+
+### 3. **Structured Ingestion & Processing**
+- Features a dropzone to drag-and-drop CSV or Excel sheets.
+- **Dynamic Headers Normalizer**: Auto-detects and aligns mismatching column headers (e.g., matching "UTR No", "Ref ID", or "Transaction No" to the schema's `transactionId`).
+- **Invoice OCR extraction**: Mock pipeline demonstrating Tesseract.js text extraction from invoice receipts.
+
+### 4. **Enterprise Audit & Exporters**
+- Downloads fully compiled **PDF Reconciliation Reports** containing aggregate statistics, job statuses, and ledger matching pairs.
+- Exports tabular **multi-sheet Excel files** for bookkeeping.
+- Includes a strict administrative **Audit Log** tracking all user actions.
 
 ---
 
@@ -124,3 +151,12 @@ ai-recon-system/
 2. **API Rate Limiter**: Limits uploads to 20 sheets per 5 minutes per IP to prevent storage flooding.
 3. **Data Sanitization**: Mongoose schema compilations and parameter sanitization to neutralize NoSQL injections.
 4. **Header Hardening**: Leverages `Helmet` to obscure internal Express fingerprints.
+
+---
+
+## 📬 Contact
+
+Feel free to reach out to me:
+
+- [LinkedIn](https://www.linkedin.com/in/jay-avgune-1316b323a?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app)
+- [Instagram](https://www.instagram.com/jay.avgune?igsh=ejF2YW44bXNrZ3Ry)
