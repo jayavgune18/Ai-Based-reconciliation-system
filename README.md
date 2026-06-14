@@ -8,7 +8,7 @@ Designed and optimized to be suitable for Final Year Engineering projects, place
 
 ## 🖥️ Live Demo
 
-Check out the live portfolio here: [🔗 View Portfolio](https://jay-avgune.netlify.app/)
+Check out the live portfolio here: [🔗 View Portfolio](https://ai-based-reconciliation-system-frontend.onrender.com)
 
 ---
 
@@ -49,22 +49,22 @@ ai-recon-system/
 ## 📸 Portfolio Screenshots
 
 ### Login
-![Login](./public/images/Login)
+![Login](frontend/public/images/Login.png)
 
 ### Dashboard
-![ Dashboard ](./public/images/Dashboard)
+![ Dashboard ](frontend/public/images/Dashboard.png)
 
 ### Reconciliation Workbench
-![Reconciliation Workbench](./public/images/ReconciliationWorkbench)
+![Reconciliation Workbench](frontend/public/images/ReconciliationWorkbench.png)
 
 ### UploadFile
-![UploadFile](./public/images/UploadFile.png)
+![UploadFile](frontend/public/images/UploadFile.png)
 
 ### FraudAlerts
-![FraudAlerts](./public/images/FraudAlerts.png)
+![FraudAlerts](frontend/public/images/FraudAlerts.png)
 
 ### Audit Logs
-![Audit Logs](./public/images/AuditLogs.png)
+![Audit Logs](frontend/public/images/AuditLogs.png)
 
 ---
 
