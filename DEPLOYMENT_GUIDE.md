@@ -38,7 +38,9 @@ Go to your Render service settings and add these environment variables:
 ```
 PORT=5000
 NODE_ENV=production
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/reconciliation_db
+# IMPORTANT: Use MONGO_URI (not MONGODB_URI) - the app reads MONGO_URI
+# If your service auto-injects MONGODB_URI, you may need to explicitly set MONGO_URI instead
+MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/reconciliation_db
 JWT_SECRET=your_strong_jwt_secret_here
 CORS_ORIGIN=https://your-frontend-domain.com
 ```
@@ -220,6 +222,33 @@ Both Render and Vercel/Netlify provide free SSL certificates automatically.
 - Check deployment history
 - View build logs
 - Monitor performance metrics
+
+---
+
+## Troubleshooting Authentication Issues
+
+### "Login failed. Incorrect credentials" Error
+If you see this error after deployment, check these common causes:
+
+1. **Database Connection**: Verify MongoDB is connected. Check Render logs for:
+   - `❌ Database Connection Error` — means MongoDB is unreachable
+   - `🚀 MongoDB Connected` — confirms successful connection
+
+2. **Environment Variable Name**: Ensure you've set `MONGO_URI` (not `MONGODB_URI`) in Render's environment variables. The app supports both names now, but double-check the value is correct.
+
+3. **Seed the Database**: After connecting MongoDB, run the seeder to create default users:
+   ```bash
+   # Run from Render shell or locally
+   cd backend && npm run seed
+   ```
+   Default credentials:
+   - Admin: `admin@recon.com` / `admin123`
+   - User: `user@recon.com` / `user123`
+
+4. **MongoDB Atlas IP Whitelist**: If using MongoDB Atlas, whitelist Render's IP (0.0.0.0/0 for all IPs) in Network Access settings.
+
+### Register Also Fails
+If registration also fails, the database connection is likely the root cause. Check Render backend logs for database-related errors.
 
 ---
 

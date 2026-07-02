@@ -15,6 +15,13 @@ const registerUser = async (req, res, next) => {
   const { name, email, password, role } = req.body;
 
   try {
+    // Check MongoDB connection state before querying
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      res.statusCode = 503;
+      return next(new Error('Database is not connected. Please check that MongoDB is running and the connection string is correct.'));
+    }
+
     const userExists = await User.findOne({ email });
 
     if (userExists) {
@@ -59,6 +66,13 @@ const loginUser = async (req, res, next) => {
     if (!email || !password) {
       res.statusCode = 400;
       return next(new Error('Please provide email and password.'));
+    }
+
+    // Check MongoDB connection state before querying
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      res.statusCode = 503;
+      return next(new Error('Database is not connected. Please check that MongoDB is running and the connection string is correct.'));
     }
 
     const user = await User.findOne({ email });

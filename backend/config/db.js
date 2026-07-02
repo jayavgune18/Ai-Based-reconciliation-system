@@ -2,7 +2,12 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/ai-recon-db', {
+    // Support both MONGO_URI and MONGODB_URI environment variables
+    const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/ai-recon-db';
+    if (!process.env.MONGO_URI && process.env.MONGODB_URI) {
+      console.log('📌 Using MONGODB_URI environment variable (fallback from MONGO_URI)');
+    }
+    const conn = await mongoose.connect(mongoUri, {
       // Connection timeout options
       serverSelectionTimeoutMS: 15000,      // 15 seconds to select server
       socketTimeoutMS: 45000,               // 45 seconds for socket operations
