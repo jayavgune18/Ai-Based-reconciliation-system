@@ -5,6 +5,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { DashboardLayout } from './layouts/DashboardLayout';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
+import { LandingPage } from './pages/LandingPage';
 import { ReconciliationWorkbench } from './pages/ReconciliationWorkbench';
 import { FraudAlerts } from './pages/FraudAlerts';
 import { AuditLogs } from './pages/AuditLogs';
@@ -21,7 +22,7 @@ const ProtectedRoute = ({ children }) => {
     );
   }
   
-  return token ? <DashboardLayout>{children}</DashboardLayout> : <Navigate to="/login" replace />;
+  return token ? <DashboardLayout>{children}</DashboardLayout> : <Navigate to="/" replace />;
 };
 
 function App() {
@@ -31,11 +32,12 @@ function App() {
         <Router>
           <Routes>
             {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
 
             {/* Protected Routes */}
             <Route 
-              path="/" 
+              path="/dashboard" 
               element={
                 <ProtectedRoute>
                   <Dashboard />

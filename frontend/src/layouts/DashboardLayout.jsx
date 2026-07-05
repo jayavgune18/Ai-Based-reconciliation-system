@@ -27,7 +27,7 @@ export const DashboardLayout = ({ children }) => {
   const location = useLocation();
 
   const navItems = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Reconcile Workbench', path: '/workbench', icon: RefreshCcw },
     { name: 'Fraud Center', path: '/fraud', icon: ShieldAlert, badge: true },
     { name: 'Audit Logs', path: '/audit', icon: History, role: 'admin' }
@@ -35,7 +35,7 @@ export const DashboardLayout = ({ children }) => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   return (
