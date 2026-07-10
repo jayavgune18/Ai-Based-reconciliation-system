@@ -53,7 +53,17 @@ const getFraudAlerts = async (req, res, next) => {
   try {
     const transactions = await Transaction.find({});
     // Run full risk heuristics
-    const alerts = FraudDetectorService.analyze(transactions);
+    let alerts = [];
+    try {
+      alerts = FraudDetectorService.analyze(transactions);
+    } catch (analysisError) {
+      console.error('Fraud analysis engine error:', analysisError.message);
+      return res.status(500).json({
+        success: false,
+        message: 'Fraud analysis engine encountered an error. Please check transaction data integrity.',
+        error: process.env.NODE_ENV === 'development' ? analysisError.message : undefined
+      });
+    }
 
     res.json({
       success: true,

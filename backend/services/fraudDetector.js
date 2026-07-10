@@ -27,6 +27,7 @@ class FraudDetectorService {
     const seen = new Map();
 
     for (const txn of transactions) {
+      if (!txn.date || isNaN(new Date(txn.date).getTime())) continue; // Skip invalid dates
       const dateStr = new Date(txn.date).toISOString().split('T')[0]; // Compare just the date
       // Unique key: amount + normalized description + date
       const normalizedDesc = txn.description.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -60,8 +61,12 @@ class FraudDetectorService {
   static detectVelocitySpikes(transactions) {
     const alerts = [];
     
+    // Filter out transactions with invalid dates before sorting
+    const valid = transactions.filter(t => t.date && !isNaN(new Date(t.date).getTime()));
+    if (valid.length < 3) return [];
+    
     // Sort transactions by date ascending
-    const sorted = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const sorted = [...valid].sort((a, b) => new Date(a.date) - new Date(b.date));
     const WINDOW_MS = 60 * 60 * 1000; // 1-hour window
 
     for (let i = 0; i < sorted.length; i++) {

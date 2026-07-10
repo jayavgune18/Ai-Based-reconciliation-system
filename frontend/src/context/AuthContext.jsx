@@ -46,6 +46,7 @@ export const AuthProvider = ({ children }) => {
         setUser(res.data.user);
         return { success: true };
       }
+      return { success: false, message: res.data?.message || 'Login failed.' };
     } catch (err) {
       return { 
         success: false, 
@@ -65,6 +66,7 @@ export const AuthProvider = ({ children }) => {
         setUser(res.data.user);
         return { success: true };
       }
+      return { success: false, message: res.data?.message || 'Registration failed.' };
     } catch (err) {
       return {
         success: false,
@@ -79,6 +81,7 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setUser(null);
     localStorage.removeItem('recon_token');
+    delete apiClient.defaults.headers.common['Authorization'];
   };
 
   return (

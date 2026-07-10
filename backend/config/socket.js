@@ -3,10 +3,25 @@ const socketIO = require('socket.io');
 let io;
 
 const initSocket = (server) => {
+  const allowedOrigins = [
+    process.env.CORS_ORIGIN,
+    'https://recon-system-frontend.onrender.com',
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://localhost:5000'
+  ].filter(Boolean);
+
   io = socketIO(server, {
     cors: {
-      origin: '*', // In production, replace with specific domains
-      methods: ['GET', 'POST', 'PUT']
+      origin: function(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'), false);
+        }
+      },
+      methods: ['GET', 'POST', 'PUT'],
+      credentials: true
     }
   });
 

@@ -5,6 +5,6 @@ const { protect, authorize } = require('../middlewares/authMiddleware');
 
 router.get('/stats', protect, getStats);
 router.get('/fraud-alerts', protect, authorize('admin'), getFraudAlerts);
-router.get('/audit-logs', protect, authorize('admin'), getAuditLogs);
+router.get('/audit-logs', protect, getAuditLogs);
 
 module.exports = router;

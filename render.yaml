@@ -1,0 +1,56 @@
+# Render Blueprint Configuration
+# This file defines the infrastructure for the AI-Based Reconciliation System
+
+services:
+  # Backend Web Service
+  - type: web
+    name: recon-system-backend
+    env: node
+    region: singapore
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "5000"
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRE
+        value: "7d"
+      - key: JWT_COOKIE_EXPIRE
+        value: "7"
+      - key: CORS_ORIGIN
+        value: "https://recon-system-frontend.onrender.com"
+
+  # Frontend Static Site
+  - type: web
+    name: recon-system-frontend
+    env: static
+    region: singapore
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: "https://recon-system-backend.onrender.com"
+      - key: VITE_ENV
+        value: production
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

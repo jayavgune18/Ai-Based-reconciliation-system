@@ -27,11 +27,11 @@ Check out the live portfolio here: [🔗 View Portfolio](https://ai-based-reconc
 ai-recon-system/
 ├── backend/
 │   ├── config/             # DB connection & Socket server wrappers
-│   ├── controllers/        # Express handlers (Auth, Recon, Dashboard, Reports)
+│   ├── controllers/        # Express handlers (Auth, Recon, Dashboard, Reports, Sharing)
 │   ├── middlewares/        # JWT Protections, Rate Limiters, File uploads
-│   ├── models/             # Mongoose schemas (User, Transaction, Match, AuditLog)
+│   ├── models/             # Mongoose schemas (User, Transaction, Match, AuditLog, ShareLink)
 │   ├── routes/             # RESTful API route declarations
-│   ├── services/           # Business logic (Reconciliation, Fraud, Exporters)
+│   ├── services/           # Business logic (Reconciliation, Fraud, Exporters, Sharing)
 │   ├── utils/              # Algorithms (Levenshtein, Cosine, Seeder script)
 │   ├── server.js           # Server Entry point
 │   └── package.json
@@ -39,7 +39,7 @@ ai-recon-system/
     ├── src/
     │   ├── context/        # Auth & Dark Theme contexts
     │   ├── layouts/        # Dashboard layout sidebar
-    │   ├── pages/          # Login, Dashboard, Workbench, Fraud, Audits
+    │   ├── pages/          # Login, Dashboard, Workbench, Fraud, Audits, Sharing
     │   └── App.jsx         # Routes definition
     ├── tailwind.config.js
     └── package.json
@@ -66,6 +66,9 @@ ai-recon-system/
 ### Audit Logs
 ![Audit Logs](frontend/public/images/AuditLogs.png)
 
+### Sharing Dashboard
+![Sharing Dashboard](frontend/public/images/SharingDashboard.png)
+
 ---
 
 ## 🚀 Key Features
@@ -87,10 +90,16 @@ ai-recon-system/
 - **Dynamic Headers Normalizer**: Auto-detects and aligns mismatching column headers (e.g., matching "UTR No", "Ref ID", or "Transaction No" to the schema's `transactionId`).
 - **Invoice OCR extraction**: Mock pipeline demonstrating Tesseract.js text extraction from invoice receipts.
 
-### 4. **Enterprise Audit & Exporters**
-- Downloads fully compiled **PDF Reconciliation Reports** containing aggregate statistics, job statuses, and ledger matching pairs.
-- Exports tabular **multi-sheet Excel files** for bookkeeping.
-- Includes a strict administrative **Audit Log** tracking all user actions.
+### 4. **Sharing & Permissions**
+- **Share** reconciliation files via email (registered users) or direct link (guest users).
+- **Role-based access**: Assign **Viewer** (read-only) or **Editor** (modify/re-run) permissions.
+- **Dashboard** with *Shared by Me* and *Shared with Me* views + real-time permission updates.
+- **Activity logs** track share events; **access revocation** is instant.
+
+### 5. **Enterprise Audit & Exporters**
+- Export **PDF Reconciliation Reports** with job summaries and match pairs.
+- Generate **multi-sheet Excel** files for bookkeeping.
+- Full **Audit Log** tracking all user actions.
 
 ---
 
@@ -151,6 +160,7 @@ ai-recon-system/
 2. **API Rate Limiter**: Limits uploads to 20 sheets per 5 minutes per IP to prevent storage flooding.
 3. **Data Sanitization**: Mongoose schema compilations and parameter sanitization to neutralize NoSQL injections.
 4. **Header Hardening**: Leverages `Helmet` to obscure internal Express fingerprints.
+5. **Share Link Tokens**: Unique, expirable tokens for guest share links with optional passphrase protection.
 
 ---
 
