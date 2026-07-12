@@ -5,7 +5,7 @@ import {
   PieChart, Pie, Cell
 } from 'recharts';
 import { 
-  TrendingUp, ShieldAlert, Award, FileSpreadsheet, ListTodo, AlertCircle,
+  ShieldAlert, Award, FileSpreadsheet, ListTodo,
   ArrowUp, ArrowDown, Clock
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -96,62 +96,62 @@ export const Dashboard = () => {
       <div className="min-h-[70vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 rounded-full border-3 border-cyan-500 border-t-transparent animate-spin" />
-          <p className="text-lg text-slate-500 dark:text-slate-400">Loading dashboard data...</p>
+          <p className="text-base text-slate-500 dark:text-slate-400">Loading dashboard data...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       
       {/* Welcome Board */}
-      <div className="p-8 rounded-2xl bg-gradient-to-br from-cyan-500 via-cyan-600 to-blue-700 text-white shadow-xl">
+      <div className="w-full p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-cyan-500 via-cyan-600 to-blue-700 text-white shadow-xl">
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-3xl font-bold">Welcome back, {user?.name || 'Officer'} 👋</h2>
-            <p className="text-lg text-cyan-100 mt-2 max-w-xl leading-relaxed">
+            <h2 className="text-xl sm:text-2xl font-bold">Welcome back, {user?.name || 'Officer'} 👋</h2>
+            <p className="text-sm sm:text-base text-cyan-100 mt-2 max-w-xl leading-relaxed">
               Your reconciliation dashboard is up to date. All systems are operational and processing normally.
             </p>
           </div>
-          <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-base font-medium">
-            <Clock size={18} />
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 text-sm font-medium">
+            <Clock size={16} />
             <span>Live</span>
           </div>
         </div>
-        <div className="mt-6 flex flex-wrap gap-6">
-          <div className="flex items-center gap-2 text-base text-cyan-100">
-            <ArrowUp size={18} className="text-emerald-300" />
+        <div className="mt-5 flex flex-wrap gap-5">
+          <div className="flex items-center gap-2 text-sm text-cyan-100">
+            <ArrowUp size={16} className="text-emerald-300" />
             <span>99.9% uptime</span>
           </div>
-          <div className="flex items-center gap-2 text-base text-cyan-100">
-            <ArrowUp size={18} className="text-emerald-300" />
+          <div className="flex items-center gap-2 text-sm text-cyan-100">
+            <ArrowUp size={16} className="text-emerald-300" />
             <span>AI engine active</span>
           </div>
         </div>
       </div>
 
       {/* Metric Tiles */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {statWidgets.map((widget, idx) => {
           const Icon = widget.icon;
           return (
-            <div key={idx} className="p-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
+            <div key={idx} className="p-5 sm:p-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
-                  <span className="text-base font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{widget.label}</span>
-                  <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{widget.value}</h3>
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{widget.label}</span>
+                  <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{widget.value}</h3>
                   <div className="flex items-center gap-1.5">
                     {widget.trend === 'up' ? (
-                      <ArrowUp size={16} className="text-emerald-500" />
+                      <ArrowUp size={14} className="text-emerald-500" />
                     ) : widget.trend === 'down' ? (
-                      <ArrowDown size={16} className="text-red-500" />
+                      <ArrowDown size={14} className="text-red-500" />
                     ) : null}
-                    <span className="text-base text-slate-500 dark:text-slate-400">{widget.change}</span>
+                    <span className="text-sm text-slate-500 dark:text-slate-400">{widget.change}</span>
                   </div>
                 </div>
                 <div className={`p-3 rounded-lg ${widget.color}`}>
-                  <Icon size={24} />
+                  <Icon size={20} />
                 </div>
               </div>
             </div>
@@ -160,12 +160,12 @@ export const Dashboard = () => {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Area Chart */}
-        <div className="lg:col-span-2 p-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <h4 className="font-semibold text-lg text-slate-900 dark:text-white mb-4">Volume Trends</h4>
-          <div className="h-72 w-full">
+        <div className="lg:col-span-2 p-5 sm:p-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <h4 className="font-semibold text-base text-slate-900 dark:text-white mb-4">Volume Trends</h4>
+          <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
@@ -175,15 +175,15 @@ export const Dashboard = () => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="dark:stroke-slate-800" />
-                <XAxis dataKey="month" stroke="#94A3B8" fontSize={14} />
-                <YAxis stroke="#94A3B8" fontSize={14} />
+                <XAxis dataKey="month" stroke="#94A3B8" fontSize={12} />
+                <YAxis stroke="#94A3B8" fontSize={12} />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: '#1E293B', 
                     borderRadius: '8px', 
                     color: '#FFF', 
                     border: 'none',
-                    fontSize: '14px'
+                    fontSize: '13px'
                   }} 
                 />
                 <Area type="monotone" dataKey="processed" stroke="#64748B" fill="none" name="Total" strokeWidth={1.5} dot={false} />
@@ -194,8 +194,8 @@ export const Dashboard = () => {
         </div>
 
         {/* Pie Chart */}
-        <div className="p-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <h4 className="font-semibold text-lg text-slate-900 dark:text-white mb-4">Distribution</h4>
+        <div className="p-5 sm:p-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <h4 className="font-semibold text-base text-slate-900 dark:text-white mb-4">Distribution</h4>
           
           <div className="h-48 w-full relative flex items-center justify-center">
             {pieChartData.length > 0 ? (
@@ -226,33 +226,33 @@ export const Dashboard = () => {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="text-slate-400 text-base">No data available</div>
+              <div className="text-slate-400 text-sm">No data available</div>
             )}
             
             {/* Center */}
             <div className="absolute flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-3xl font-bold text-slate-900 dark:text-white">{stats.accuracyRate}%</span>
-              <span className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Accuracy</span>
+              <span className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{stats.accuracyRate}%</span>
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Accuracy</span>
             </div>
           </div>
 
           {/* Legend */}
-          <div className="space-y-3 mt-6 pt-5 border-t border-slate-100 dark:border-slate-800/80">
-            <div className="flex items-center justify-between text-base">
+          <div className="space-y-2 mt-5 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+            <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-cyan-500" />
                 <span className="text-slate-600 dark:text-slate-400">Matched</span>
               </div>
               <span className="font-semibold text-slate-900 dark:text-white">{stats.matchedCount}</span>
             </div>
-            <div className="flex items-center justify-between text-base">
+            <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-amber-500" />
                 <span className="text-slate-600 dark:text-slate-400">Partial</span>
               </div>
               <span className="font-semibold text-slate-900 dark:text-white">{stats.discrepancyCount}</span>
             </div>
-            <div className="flex items-center justify-between text-base">
+            <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-red-500" />
                 <span className="text-slate-600 dark:text-slate-400">Unmatched</span>

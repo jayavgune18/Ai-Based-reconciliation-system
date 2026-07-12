@@ -517,7 +517,7 @@ export const Settings = () => {
       {/* Page Header */}
       <div>
         <h1 className="text-3xl font-extrabold text-slate-800 dark:text-slate-100">Settings</h1>
-        <p className="text-lg text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-base text-slate-500 dark:text-slate-400 mt-1">
           Manage your account, security, and preferences
         </p>
       </div>
@@ -531,13 +531,13 @@ export const Settings = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-5 py-3 text-base font-semibold rounded-t-lg transition-all duration-200 
+              className={`flex items-center gap-2 px-6 py-3.5 text-base font-semibold rounded-t-lg transition-all duration-200 
                 ${isActive
                   ? 'bg-white dark:bg-slate-900 text-cyan-600 dark:text-cyan-400 border-b-2 border-cyan-500 shadow-sm'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60'
                 }`}
             >
-              <Icon size={18} />
+              <Icon size={20} />
               <span className="hidden sm:inline">{tab.label}</span>
             </button>
           );
@@ -638,26 +638,26 @@ export const Settings = () => {
                   {/* Storage Meter */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      <span className="text-base font-bold text-slate-700 dark:text-slate-300">
                         {storageStats.used.kb.toFixed(2)} KB used
                       </span>
-                      <span className="text-[10px] text-slate-400">
+                      <span className="text-sm text-slate-400">
                         {storageStats.total.mb} MB total
                       </span>
                     </div>
-                    <div className="w-full h-3 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <div className="w-full h-4 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500"
                         style={{ width: `${Math.min(storageStats.usagePercent, 100)}%` }}
                       />
                     </div>
-                    <p className="text-[10px] text-slate-400 mt-1.5">
+                    <p className="text-sm text-slate-400 mt-1.5">
                       {storageStats.usagePercent.toFixed(1)}% of quota used
                     </p>
                   </div>
 
                   {/* Detailed Counts */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {[
                       { label: 'Total Transactions', value: storageStats.details.transactions, icon: FileText, color: 'text-cyan-500 bg-cyan-500/10' },
                       { label: 'Bank Records', value: storageStats.details.bankRecords, icon: Database, color: 'text-blue-500 bg-blue-500/10' },
@@ -668,21 +668,21 @@ export const Settings = () => {
                     ].map((item, idx) => {
                       const Icon = item.icon;
                       return (
-                        <div key={idx} className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50">
-                          <div className="flex items-center gap-2 mb-1">
-                            <div className={`p-1 rounded ${item.color}`}>
-                              <Icon size={12} />
+                        <div key={idx} className="p-5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className={`p-2 rounded ${item.color}`}>
+                              <Icon size={18} />
                             </div>
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400">{item.label}</span>
+                            <span className="text-sm text-slate-500 dark:text-slate-400">{item.label}</span>
                           </div>
-                          <p className="text-lg font-extrabold text-slate-800 dark:text-slate-200">{item.value}</p>
+                          <p className="text-2xl font-extrabold text-slate-800 dark:text-slate-200">{item.value}</p>
                         </div>
                       );
                     })}
                   </div>
                 </div>
               ) : (
-                <div className="py-8 text-center text-xs text-slate-400">Unable to load storage data.</div>
+                <div className="py-8 text-center text-sm text-slate-400">Unable to load storage data.</div>
               )}
             </SectionCard>
           </div>
@@ -778,43 +778,43 @@ export const Settings = () => {
                   <Loader2 size={20} className="animate-spin text-cyan-500" />
                 </div>
               ) : sessions.length === 0 ? (
-                <div className="py-8 text-center text-xs text-slate-400">No active sessions found.</div>
+                <div className="py-8 text-center text-sm text-slate-400">No active sessions found.</div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {sessions.map((session) => {
                     const DeviceIcon = getDeviceIcon(session.userAgent);
                     const isCurrent = session.isCurrentSession;
                     return (
                       <div
                         key={session._id}
-                        className={`flex items-center justify-between p-4 rounded-lg border transition-all duration-200
+                        className={`flex items-center justify-between p-6 rounded-lg border transition-all duration-200
                           ${isCurrent
                             ? 'bg-cyan-500/5 dark:bg-cyan-500/5 border-cyan-500/20 dark:border-cyan-500/20'
                             : 'bg-slate-50 dark:bg-slate-800/40 border-slate-100 dark:border-slate-800/50 hover:border-slate-200 dark:hover:border-slate-700'
                           }`}
                       >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className={`p-2 rounded-full ${isCurrent ? 'bg-cyan-500/10 text-cyan-500' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'}`}>
-                            <DeviceIcon size={16} />
+                        <div className="flex items-center gap-5 min-w-0">
+                          <div className={`p-3 rounded-full ${isCurrent ? 'bg-cyan-500/10 text-cyan-500' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'}`}>
+                            <DeviceIcon size={22} />
                           </div>
                           <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <p className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
+                            <div className="flex items-center gap-3">
+                              <p className="text-base font-bold text-slate-700 dark:text-slate-300 truncate">
                                 {getDeviceName(session)}
                               </p>
                               {isCurrent && (
-                                <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-cyan-500/10 text-cyan-500 border border-cyan-500/20">
+                                <span className="px-2.5 py-0.5 text-xs font-bold rounded bg-cyan-500/10 text-cyan-500 border border-cyan-500/20">
                                   Current
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center gap-3 mt-0.5 text-[10px] text-slate-400">
-                              <span className="flex items-center gap-1">
-                                <Globe size={10} />
+                            <div className="flex items-center gap-5 mt-1 text-sm text-slate-400">
+                              <span className="flex items-center gap-1.5">
+                                <Globe size={14} />
                                 {session.ip || 'Unknown IP'}
                               </span>
-                              <span className="flex items-center gap-1">
-                                <Clock size={10} />
+                              <span className="flex items-center gap-1.5">
+                                <Clock size={14} />
                                 {formatLastActive(session.lastActivity)}
                               </span>
                             </div>
@@ -825,13 +825,13 @@ export const Settings = () => {
                           <button
                             onClick={() => setRevokeSessionId(session._id)}
                             disabled={revokeSessionId === session._id}
-                            className="flex-shrink-0 p-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                            className="flex-shrink-0 p-2.5 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
                             title="Revoke session"
                           >
                             {revokeSessionId === session._id ? (
-                              <Loader2 size={14} className="animate-spin" />
+                              <Loader2 size={18} className="animate-spin" />
                             ) : (
-                              <X size={14} />
+                              <X size={18} />
                             )}
                           </button>
                         )}
@@ -843,20 +843,20 @@ export const Settings = () => {
 
               {/* Revoke confirmation inline */}
               {revokeSessionId && (
-                <div className="mt-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                <div className="mt-4 p-5 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-between">
+                  <span className="text-base font-medium text-amber-600 dark:text-amber-400">
                     Revoke this session? The device will be logged out immediately.
                   </span>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <button
                       onClick={() => setRevokeSessionId(null)}
-                      className="px-3 py-1.5 text-[10px] font-semibold rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+                      className="px-5 py-2 text-sm font-semibold rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={() => handleRevokeSession(revokeSessionId)}
-                      className="px-3 py-1.5 text-[10px] font-bold text-white bg-red-500 rounded hover:bg-red-600 transition-colors"
+                      className="px-5 py-2 text-sm font-bold text-white bg-red-500 rounded hover:bg-red-600 transition-colors"
                     >
                       Revoke
                     </button>
@@ -866,12 +866,12 @@ export const Settings = () => {
 
               {/* Logout All Devices Button */}
               {sessions.length > 1 && (
-                <div className="flex justify-end pt-3">
+                <div className="flex justify-end pt-4">
                   <button
                     onClick={() => setShowLogoutAllModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-red-500 hover:bg-red-500/5 rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-5 py-3 text-base font-semibold text-red-500 hover:bg-red-500/5 rounded-lg transition-colors"
                   >
-                    <LogOut size={14} />
+                    <LogOut size={18} />
                     Logout from all other devices
                   </button>
                 </div>

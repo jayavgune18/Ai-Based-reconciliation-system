@@ -117,10 +117,8 @@ app.use(errorHandler);
 // Start listening
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`===================================================`);
   console.log(`🔥 SERVER RUNNING IN ${process.env.NODE_ENV || 'development'} MODE ON PORT ${PORT}`);
   console.log(`🚀 API Gateway active at: http://localhost:${PORT}/`);
-  console.log(`===================================================`);
 });
 
 // Graceful shutdowns
