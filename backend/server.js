@@ -60,6 +60,10 @@ app.use(cors({
   maxAge: 86400
 }));
 
+// Trust proxy - Required for correct IP detection behind Render/NGINX/load balancers
+// This ensures req.ip returns the real client IP, not the proxy's IP
+app.set('trust proxy', 1);
+
 // Compression middleware for gzip/brotli
 app.use(compression());
 
@@ -74,14 +78,12 @@ if (process.env.NODE_ENV === 'production') {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Cookie parser
-app.use(cookieParser(process.env.COOKIE_SECRET));
+// Cookie parser - with graceful fallback if COOKIE_SECRET is not set
+const cookieSecret = process.env.COOKIE_SECRET || process.env.JWT_SECRET || 'default_fallback_secret_for_dev';
+app.use(cookieParser(cookieSecret));
 
 // MongoDB sanitization (prevents NoSQL injection)
 app.use(mongoSanitize());
-
-// Global API rate limiting
-app.use('/api/', apiLimiter);
 
 // Initialize Passport
 app.use(passport.initialize());

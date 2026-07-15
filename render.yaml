@@ -26,6 +26,8 @@ services:
         value: "7"
       - key: CORS_ORIGIN
         value: "https://recon-system-frontend.onrender.com"
+      - key: COOKIE_SECRET
+        sync: false
 
   # Frontend Static Site
   - type: web

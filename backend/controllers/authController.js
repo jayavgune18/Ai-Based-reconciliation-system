@@ -162,12 +162,27 @@ const loginUser = async (req, res, next) => {
 // @access  Private
 const getMe = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    // req.user is already attached by auth middleware with .select('-password')
+    // No need to re-query the database
+    if (!req.user) {
+      res.statusCode = 401;
+      return next(new Error('User not found. Please login again.'));
+    }
+
+    const userObj = req.user.toObject();
+    // Normalize _id to id for consistent frontend access
     res.json({
       success: true,
       user: {
-        ...user.toObject(),
-        password: undefined
+        id: userObj._id,
+        name: userObj.name,
+        email: userObj.email,
+        role: userObj.role,
+        avatar: userObj.avatar,
+        isVerified: userObj.isVerified,
+        isActive: userObj.isActive,
+        lastLogin: userObj.lastLogin,
+        createdAt: userObj.createdAt,
       },
     });
   } catch (error) {
