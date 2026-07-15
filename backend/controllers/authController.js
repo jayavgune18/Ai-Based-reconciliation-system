@@ -5,7 +5,7 @@ const Session = require('../models/Session');
 
 // Helper to generate token
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'supersecretkeychangeinproduction123!@#', {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || '1d',
   });
 };
@@ -21,7 +21,7 @@ const sendTokenResponse = (user, statusCode, res) => {
     httpOnly: true, // Cannot be accessed by client-side JS (XSS protection)
     signed: true,   // Signed cookie
     secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
   };
 
   res.status(statusCode)
@@ -193,6 +193,8 @@ const logout = async (req, res, next) => {
       expires: new Date(Date.now() + 5 * 1000), // 5 seconds
       httpOnly: true,
       signed: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     });
 
     res.json({
@@ -344,7 +346,7 @@ const oauthCallback = async (req, res, next) => {
       httpOnly: true,
       signed: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     };
 
     // Redirect to frontend with token in cookie

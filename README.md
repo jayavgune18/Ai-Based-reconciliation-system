@@ -6,7 +6,23 @@ Designed and optimized to be suitable for Final Year Engineering projects, place
 
 ---
 
-## 🖥️ Live Demo
+## 📚 Table of Contents
+
+- [Live Demo](#️-live-demo)
+- [Key Features](#-key-features)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-system-folder-structure)
+- [Screenshot Overview](#-screenshots)
+- [Getting Started & Local Setup](#-getting-started--local-setup)
+  - [Environment Setup](#prerequisites)
+  - [Server Setup](#step-1-set-up-the-backend)
+  - [Client Setup](#step-2-set-up-the-frontend)
+- [Security Architecture](#-security-architecture)
+- [Contact](#-contact)
+
+---
+
+## �️ Live Demo
 
 Check out the live portfolio here: [🔗 View Portfolio](https://ai-based-reconciliation-system-frontend.onrender.com)
 
@@ -46,28 +62,38 @@ ai-recon-system/
 
 ```
 
-## 📸 Portfolio Screenshots
+---
 
-### Login
-![Login](frontend/public/images/Login.png)
+## 📸 Screenshots
 
-### Dashboard
-![ Dashboard ](frontend/public/images/Dashboard.png)
+### 🔐 Authentication
+| Login | Register |
+|:----:|:----:|
+| ![Login](frontend/public/images/Login.png) | ![Register](frontend/public/images/Register.png) |
 
-### Reconciliation Workbench
-![Reconciliation Workbench](frontend/public/images/ReconciliationWorkbench.png)
+### 📊 Dashboard & Workbench
+| Dashboard |
+|:----:|
+| ![Dashboard](frontend/public/images/Dashboard.png) |
 
-### UploadFile
-![UploadFile](frontend/public/images/UploadFile.png)
+### 📁 File Upload
+| Upload Interface | Reconciliation Workbench |
+|:----:|:----:|
+| ![UploadFile](frontend/public/images/UploadFile.png) | ![Reconciliation Workbench](frontend/public/images/ReconciliationWorkbench.png) |
 
-### FraudAlerts
-![FraudAlerts](frontend/public/images/FraudAlerts.png)
+### 🚨 Fraud Detection & Audit
+| Fraud Alerts | Audit Logs |
+|:----:|:----:|
+| ![FraudAlerts](frontend/public/images/FraudAlerts.png) | ![Audit Logs](frontend/public/images/AuditLogs.png) |
 
-### Audit Logs
-![Audit Logs](frontend/public/images/AuditLogs.png)
+### ⚙️ Settings Pages
+| Profile Settings | Storage Overview | Password Change |
+|:----:|:----:|:----:|
+| ![SettingsProfile](frontend/public/images/SettingsProfile.png) | ![SettingsStorage](frontend/public/images/SettingsStorage.png) | ![SettingsPassword](frontend/public/images/SettingsPassword.png) |
 
-### Sharing Dashboard
-![Sharing Dashboard](frontend/public/images/SharingDashboard.png)
+| Devices & Sessions | Account Options |
+|:----:|:----:|
+| ![SettingsDevicesAndSessions](frontend/public/images/SettingsDevicesAndSessions.png) | ![SettingsAccountOptions](frontend/public/images/SettingsAccountOptions.png) |
 
 ---
 
@@ -114,12 +140,12 @@ ai-recon-system/
    ```bash
    cd backend
    ```
-2. Configure your environment variables. The `.env` file is pre-configured for local setups out of the box:
+2. Configure your environment variables:
    ```ini
-   PORT=5000
-   MONGO_URI=mongodb://localhost:27017/ai-recon-db
-   JWT_SECRET=supersecretkeychangeinproduction123!@#
-   NODE_ENV=development
+   PORT=
+   MONGO_URI=
+   JWT_SECRET=
+   NODE_ENV=
    ```
 3. Run the DB Seeder to populate initial data, default accounts, and graphs:
    ```bash
@@ -143,17 +169,6 @@ ai-recon-system/
 
 ---
 
-## 🔑 Default Accounts (Pre-Seeded)
-
-- **System Administrator (Full access to Audit Logs & Fraud Center)**:
-  - **Email**: `admin@recon.com`
-  - **Password**: `admin123`
-- **Reconciliation Officer (Standard upload and review actions)**:
-  - **Email**: `user@recon.com`
-  - **Password**: `user123`
-
----
-
 ## 🔒 Security Architecture
 
 1. **Authentication**: JWT token signatures with short TTL, mapped directly to secure Axios request headers.
@@ -169,4 +184,3 @@ ai-recon-system/
 Feel free to reach out to me:
 
 - [LinkedIn](https://www.linkedin.com/in/jay-avgune-1316b323a?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app)
-- [Instagram](https://www.instagram.com/jay.avgune?igsh=ejF2YW44bXNrZ3Ry)

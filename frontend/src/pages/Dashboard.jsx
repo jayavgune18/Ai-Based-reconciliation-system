@@ -33,11 +33,14 @@ export const Dashboard = () => {
           setChartData(statsRes.data.chartData);
         }
         
-        if (user?.role === 'admin') {
+        try {
           const fraudRes = await apiClient.get('/api/dashboard/fraud-alerts');
           if (fraudRes.data.success) {
             setFraudCount(fraudRes.data.count);
           }
+        } catch (fraudErr) {
+          // Fraud alerts are optional; don't block dashboard if unavailable
+          console.warn('Fraud alerts unavailable:', fraudErr.message);
         }
       } catch (err) {
         console.error('Failed to load dashboard data:', err);
@@ -83,11 +86,13 @@ export const Dashboard = () => {
     },
     { 
       label: 'Fraud Alerts', 
-      value: user?.role === 'admin' ? fraudCount : '—', 
-      change: user?.role === 'admin' ? 'Requires attention' : 'Restricted',
-      trend: 'up',
+      value: fraudCount, 
+      change: fraudCount > 0 ? 'Requires attention' : 'No threats detected',
+      trend: fraudCount > 0 ? 'up' : 'neutral',
       icon: ShieldAlert, 
-      color: 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-500/10' 
+      color: fraudCount > 0 
+        ? 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-500/10' 
+        : 'text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/10'
     }
   ];
 

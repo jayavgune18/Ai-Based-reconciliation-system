@@ -43,7 +43,7 @@ export const AuditLogs = () => {
 
   return (
     <div className="space-y-6">
-      
+
       {/* Top Header */}
       <div className="p-5 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm flex items-center gap-4">
         <div className="p-2.5 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-lg shrink-0">
@@ -79,7 +79,7 @@ export const AuditLogs = () => {
         </div>
       ) : (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
-          
+
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-sm">
               <thead>
@@ -107,10 +107,9 @@ export const AuditLogs = () => {
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${
-                        log.action === 'STATEMENT_INGESTION' ? 'bg-cyan-500/10 text-cyan-500' :
-                        log.action === 'MATCH_RESOLUTION' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-500/10 text-slate-500'
-                      }`}>
+                      <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${log.action === 'STATEMENT_INGESTION' ? 'bg-cyan-500/10 text-cyan-500' :
+                          log.action === 'MATCH_RESOLUTION' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-500/10 text-slate-500'
+                        }`}>
                         {log.action.replace('_', ' ')}
                       </span>
                     </td>

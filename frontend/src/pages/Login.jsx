@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Lock, Mail, User, UserIcon, AlertCircle, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Shield, Lock, Mail, User, AlertCircle, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { FormInput } from '../layouts/FormInput';
 
 export const Login = () => {
   const { login, register } = useAuth();
@@ -14,7 +15,7 @@ export const Login = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'user' // Role is fixed to 'user' for public registration
+    role: 'user' // Role is fixed to 'user' for public registration (backend ignores role)
   });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -89,8 +90,8 @@ export const Login = () => {
             {isRegister ? 'Create Account' : 'Welcome Back'}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {isRegister 
-              ? 'Register for ledger audit operations' 
+            {isRegister
+              ? 'Register for ledger audit operations'
               : 'Sign in to your reconciliation portal'}
           </p>
         </div>
@@ -98,7 +99,7 @@ export const Login = () => {
         {/* Form Card */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-5">
-            
+
             {error && (
               <div className="p-3 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm flex items-center gap-2">
                 <AlertCircle size={16} className="shrink-0" />
@@ -107,115 +108,59 @@ export const Login = () => {
             )}
 
             {isRegister && (
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                  Full Name
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <User size={18} />
-                  </div>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="Enter your full name"
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition dark:text-white placeholder-slate-400"
-                  />
-                </div>
-              </div>
+              <FormInput
+                label="Full Name"
+                id="name"
+                name="name"
+                icon={User}
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="Enter your full name"
+              />
             )}
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                Email Address
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                  <Mail size={18} />
-                </div>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="Enter your email"
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition dark:text-white placeholder-slate-400"
-                />
-              </div>
-            </div>
+            <FormInput
+              label="Email Address"
+              id="email"
+              name="email"
+              type="email"
+              icon={Mail}
+              value={formData.email}
+              onChange={handleInputChange}
+              placeholder="Enter your email"
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                  <Lock size={18} />
-                </div>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="Enter your password"
-                  className="w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition dark:text-white placeholder-slate-400"
-                />
+            <FormInput
+              label="Password"
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              icon={Lock}
+              value={formData.password}
+              onChange={handleInputChange}
+              placeholder="Enter your password"
+              rightElement={
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
-              </div>
-            </div>
+              }
+            />
 
             {isRegister && (
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <Lock size={18} />
-                  </div>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    placeholder="Confirm your password"
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition dark:text-white placeholder-slate-400"
-                  />
-                </div>
-              </div>
-            )}
-
-            {isRegister && (
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                  Account Type
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <UserIcon size={18} />
-                  </div>
-                  <select
-                    name="role"
-                    value={formData.role}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition dark:text-white appearance-none cursor-pointer"
-                  >
-                    <option value="user">Standard User</option>
-                    <option value="admin">Administrator</option>
-                  </select>
-                </div>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">
-                  Select the account type. Admin privileges grant access to user management and system settings.
-                </p>
-              </div>
+              <FormInput
+                label="Confirm Password"
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showPassword ? 'text' : 'password'}
+                icon={Lock}
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                placeholder="Confirm your password"
+              />
             )}
 
             <button

@@ -18,7 +18,7 @@ const protect = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecretkeychangeinproduction123!@#');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = await User.findById(decoded.id).select('-password');
     if (!req.user) {
       return res.status(401).json({ success: false, message: 'User belonging to this token no longer exists.' });

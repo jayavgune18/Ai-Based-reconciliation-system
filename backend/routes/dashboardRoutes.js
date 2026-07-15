@@ -4,7 +4,7 @@ const { getStats, getFraudAlerts, getAuditLogs } = require('../controllers/dashb
 const { protect, authorize } = require('../middlewares/authMiddleware');
 
 router.get('/stats', protect, getStats);
-router.get('/fraud-alerts', protect, authorize('admin'), getFraudAlerts);
+router.get('/fraud-alerts', protect, getFraudAlerts);
 router.get('/audit-logs', protect, getAuditLogs);
 
 module.exports = router;

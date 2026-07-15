@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken');
 
 // Helper to generate token
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'supersecretkeychangeinproduction123!@#', {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || '1d',
   });
 };

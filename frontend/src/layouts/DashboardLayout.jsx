@@ -61,17 +61,17 @@ export const DashboardLayout = ({ children }) => {
 
       {/* Sidebar */}
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-60 lg:static lg:block transform transition-transform duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-50 w-72 lg:static lg:block transform transition-transform duration-300 ease-in-out
         bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* Brand */}
-        <div className="h-14 flex items-center justify-between px-5 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-500/20 text-xs">
+        <div className="h-20 flex items-center justify-between px-5 border-b border-slate-200 dark:border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-500/20 text-base">
               A
             </div>
-            <span className="font-bold text-sm tracking-tight">
+            <span className="font-bold text-lg tracking-tight">
               <span className="text-slate-900 dark:text-white">Recon</span>
               <span className="text-cyan-600 dark:text-cyan-400">System</span>
             </span>
@@ -84,18 +84,22 @@ export const DashboardLayout = ({ children }) => {
         {/* User Widget */}
         <div className="p-3 mx-3 my-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white text-xs shadow-md shrink-0">
-              {user?.name ? user.name.charAt(0).toUpperCase() : 'O'}
-            </div>
+            {user?.avatar ? (
+              <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover shadow-md shrink-0" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white text-sm shadow-md shrink-0">
+                {user?.name ? user.name.charAt(0).toUpperCase() : 'O'}
+              </div>
+            )}
             <div className="overflow-hidden flex-1 min-w-0">
-              <h4 className="font-semibold text-sm truncate text-slate-900 dark:text-white">{user?.name || 'Recon Officer'}</h4>
-              <div className="flex items-center gap-1">
-                <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+              <h4 className="font-semibold text-base truncate text-slate-900 dark:text-white">{user?.name || 'Recon Officer'}</h4>
+              <div className="flex">
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                   user?.role === 'admin'
-                    ? 'bg-cyan-100 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-300'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                    ? 'bg-cyan-100 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400'
+                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
                 }`}>
-                  <Shield size={10} />
+                  {user?.role === 'admin' ? <Shield size={12} /> : <UserIcon size={12} />}
                   {user?.role || 'User'}
                 </span>
               </div>
@@ -131,7 +135,7 @@ export const DashboardLayout = ({ children }) => {
                 to={item.path}
                 onClick={() => setSidebarOpen(false)}
                 className={`
-                  flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                  flex items-center justify-between px-3 py-2.5 rounded-lg text-base font-medium transition-all duration-200
                   ${isActive 
                     ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/10' 
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'}
@@ -139,7 +143,7 @@ export const DashboardLayout = ({ children }) => {
                 `}
               >
                 <div className="flex items-center gap-3">
-                  <Icon size={16} />
+                  <Icon size={18} />
                   <span>{item.name}</span>
                 </div>
                 {item.badge && (
@@ -167,17 +171,17 @@ export const DashboardLayout = ({ children }) => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="h-14 px-4 sm:px-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between sticky top-0 z-30">
+        <header className="h-20 px-4 sm:px-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between sticky top-0 z-30">
           
           {/* Left side */}
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="lg:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
-              <Menu size={18} />
+              <Menu size={20} />
             </button>
-            <h2 className="hidden sm:block font-semibold text-sm text-slate-500 dark:text-slate-400">
+            <h2 className="hidden sm:block font-semibold text-lg text-slate-500 dark:text-slate-400">
               {navItems.find(item => item.path === location.pathname)?.name || 'Dashboard'}
             </h2>
           </div>
@@ -187,10 +191,10 @@ export const DashboardLayout = ({ children }) => {
             {/* Theme Toggle */}
             <button 
               onClick={toggleTheme}
-              className="p-1.5 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               title="Toggle Theme"
             >
-              {darkMode ? <Sun size={16} className="text-amber-500" /> : <Moon size={16} />}
+              {darkMode ? <Sun size={18} className="text-amber-500" /> : <Moon size={18} />}
             </button>
 
             {/* Notifications */}
@@ -200,9 +204,9 @@ export const DashboardLayout = ({ children }) => {
                   setShowNotifications(!showNotifications);
                   setNotificationCount(0);
                 }}
-                className="p-1.5 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative"
+                className="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative"
               >
-                <Bell size={16} />
+                <Bell size={18} />
                 {notificationCount > 0 && (
                   <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-500 border border-white dark:border-slate-900" />
                 )}
@@ -230,17 +234,21 @@ export const DashboardLayout = ({ children }) => {
 
             {/* User Avatar */}
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => setShowUserMenu(!showUserMenu)}>
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white text-xs shadow-md">
-                {user?.name ? user.name.charAt(0).toUpperCase() : 'O'}
-              </div>
-              <span className="hidden md:block text-sm font-medium text-slate-700 dark:text-slate-300">{user?.name || 'Officer'}</span>
-              <ChevronDown size={12} className="hidden md:block text-slate-400" />
+              {user?.avatar ? (
+                <img src={user.avatar} alt={user.name} className="w-9 h-9 rounded-full object-cover shadow-md" />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-bold text-white text-sm shadow-md">
+                  {user?.name ? user.name.charAt(0).toUpperCase() : 'O'}
+                </div>
+              )}
+              <span className="hidden md:block text-base font-medium text-slate-700 dark:text-slate-300">{user?.name || 'Officer'}</span>
+              <ChevronDown size={14} className="hidden md:block text-slate-400" />
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-6 sm:p-8 lg:p-10 overflow-y-auto w-full">
           {children}
         </main>
       </div>

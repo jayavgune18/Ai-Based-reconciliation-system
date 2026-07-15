@@ -8,6 +8,7 @@ import {
   ChevronLeft, ChevronRight, User as UserIcon,
   Mail, Calendar, Activity
 } from 'lucide-react';
+import { StatCard } from '../layouts/StatCard';
 
 export const UserManagement = () => {
   const { user: currentUser } = useAuth();
@@ -148,34 +149,29 @@ export const UserManagement = () => {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
-            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs font-medium mb-1">
-              <Users size={16} />
-              Total Users
-            </div>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.totalUsers}</p>
-          </div>
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
-            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs font-medium mb-1">
-              <Activity size={16} />
-              Active Users
-            </div>
-            <p className="text-2xl font-bold text-emerald-500">{stats.activeUsers}</p>
-          </div>
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
-            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs font-medium mb-1">
-              <Shield size={16} />
-              Admins
-            </div>
-            <p className="text-2xl font-bold text-cyan-500">{stats.adminCount}</p>
-          </div>
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
-            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs font-medium mb-1">
-              <Calendar size={16} />
-              Verified
-            </div>
-            <p className="text-2xl font-bold text-blue-500">{stats.verifiedUsers}</p>
-          </div>
+          <StatCard
+            icon={Users}
+            label="Total Users"
+            value={stats.totalUsers}
+          />
+          <StatCard
+            icon={Activity}
+            label="Active Users"
+            value={stats.activeUsers}
+            colorClass="text-emerald-500"
+          />
+          <StatCard
+            icon={Shield}
+            label="Admins"
+            value={stats.adminCount}
+            colorClass="text-cyan-500"
+          />
+          <StatCard
+            icon={Calendar}
+            label="Verified"
+            value={stats.verifiedUsers}
+            colorClass="text-blue-500"
+          />
         </div>
       )}
 

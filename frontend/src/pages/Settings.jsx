@@ -309,7 +309,12 @@ export const Settings = () => {
 
   const handleAvatarUpload = (file) => {
     setAvatarFile(file);
-    setProfile((prev) => ({ ...prev, avatar: URL.createObjectURL(file) }));
+    // Convert file to base64 data URL for permanent storage (survives restart)
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setProfile((prev) => ({ ...prev, avatar: ev.target.result }));
+    };
+    reader.readAsDataURL(file);
   };
 
   // ═════════════════════════════════════════════════════════════════════════

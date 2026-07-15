@@ -7,6 +7,12 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      height: {
+        '18': '4.5rem',
+      },
+      width: {
+        '90': '22.5rem',
+      },
       colors: {
         brand: {
           50: '#f0f9ff',

@@ -23,8 +23,8 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
-    // Log API calls in development
-    if (import.meta.env.VITE_ENV !== 'production') {
+    // Log API calls in development only - VITE_ENV should be set in .env files
+    if (import.meta.env.DEV || import.meta.env.VITE_ENV === 'development') {
       console.log(`🚀 API ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
     }
     
@@ -48,8 +48,8 @@ apiClient.interceptors.response.use(
       }
     }
     
-    // Log API errors in development
-    if (import.meta.env.VITE_ENV !== 'production') {
+    // Log API errors in development only
+    if (import.meta.env.DEV || import.meta.env.VITE_ENV === 'development') {
       console.error(`❌ API Error [${error.response?.status}]:`, error.response?.data?.message || error.message);
     }
     

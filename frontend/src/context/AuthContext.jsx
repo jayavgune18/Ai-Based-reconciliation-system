@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import apiClient from '../services/api';
 
 const AuthContext = createContext();
@@ -7,6 +7,8 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(() => localStorage.getItem('recon_token'));
   const [loading, setLoading] = useState(true);
+  const initialFetchDone = useRef(false);
+  const isManualSet = useRef(false);
 
   // Setup default axios interceptor for headers when token changes
   useEffect(() => {
@@ -14,21 +16,34 @@ export const AuthProvider = ({ children }) => {
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       localStorage.setItem('recon_token', token);
       
-      // Fetch user profile dynamically
-      apiClient.get('/api/auth/me')
-        .then(res => {
-          if (res.data.success) {
-            setUser(res.data.user);
-          } else {
+      // Skip re-fetch if user was already set by login/register
+      if (isManualSet.current) {
+        isManualSet.current = false;
+        initialFetchDone.current = true;
+        setLoading(false);
+        return;
+      }
+      
+      // Only fetch /me on page refresh (initial load), not on login/register
+      if (!initialFetchDone.current) {
+        initialFetchDone.current = true;
+        apiClient.get('/api/auth/me')
+          .then(res => {
+            if (res.data.success) {
+              setUser(res.data.user);
+            } else {
+              logout();
+            }
+          })
+          .catch(() => {
             logout();
-          }
-        })
-        .catch(() => {
-          logout();
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      } else {
+        setLoading(false);
+      }
     } else {
       delete apiClient.defaults.headers.common['Authorization'];
       localStorage.removeItem('recon_token');
@@ -42,6 +57,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await apiClient.post('/api/auth/login', { email, password });
       if (res.data.success) {
+        isManualSet.current = true;
         setToken(res.data.token);
         setUser(res.data.user);
         return { success: true };
@@ -62,6 +78,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await apiClient.post('/api/auth/register', { name, email, password, role });
       if (res.data.success) {
+        isManualSet.current = true;
         setToken(res.data.token);
         setUser(res.data.user);
         return { success: true };
@@ -78,6 +95,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    isManualSet.current = true;
     setToken(null);
     setUser(null);
     localStorage.removeItem('recon_token');

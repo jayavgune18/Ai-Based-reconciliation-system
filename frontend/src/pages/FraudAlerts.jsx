@@ -1,19 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../services/api';
 import { ShieldAlert, AlertTriangle, Info, Clock, AlertCircle } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
 
 export const FraudAlerts = () => {
-  const { user } = useAuth();
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const fetchAlerts = async () => {
-    if (user?.role !== 'admin') {
-      setLoading(false);
-      return;
-    }
     try {
       setError(null);
       setLoading(true);
@@ -36,21 +30,7 @@ export const FraudAlerts = () => {
 
   useEffect(() => {
     fetchAlerts();
-  }, [user]);
-
-  if (user?.role !== 'admin') {
-    return (
-      <div className="min-h-[50vh] flex items-center justify-center p-8 border border-dashed border-red-500/20 bg-red-500/5 rounded-2xl">
-        <div className="text-center max-w-lg">
-          <ShieldAlert className="text-red-500 mx-auto mb-4" size={48} />
-          <h4 className="font-bold text-lg text-red-500 uppercase tracking-widest">Unauthorized Access Restricted</h4>
-          <p className="text-sm text-slate-500 mt-2 leading-relaxed">
-            Access to analytical risk engines and duplicate velocity scans is reserved exclusively for the Lead Audit Architect role.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  }, []);
 
   return (
     <div className="space-y-6">
