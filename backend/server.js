@@ -13,6 +13,23 @@ const { initSocket } = require('./config/socket');
 const errorHandler = require('./middlewares/errorHandler');
 const { apiLimiter } = require('./middlewares/rateLimiter');
 
+// ==========================================
+// PRODUCTION ENVIRONMENT VALIDATION
+// ==========================================
+const requiredEnvVars = ['JWT_SECRET', 'MONGO_URI'];
+if (process.env.NODE_ENV === 'production') {
+  const missing = requiredEnvVars.filter(v => !process.env[v] || process.env[v] === 'your_jwt_signing_secret_here');
+  if (missing.length > 0) {
+    console.error(`❌ CRITICAL: Missing required environment variables in production: ${missing.join(', ')}`);
+    console.error('   Please set these in your Render dashboard / environment config.');
+    process.exit(1);
+  }
+  // Warn about missing optional but recommended vars
+  if (!process.env.COOKIE_SECRET) {
+    console.warn('⚠️  WARNING: COOKIE_SECRET not set. Using JWT_SECRET as fallback (less secure).');
+  }
+}
+
 // Route Imports
 const authRoutes = require('./routes/authRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
