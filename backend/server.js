@@ -56,7 +56,7 @@ app.use(helmet({
 // CORS - Explicit configuration for production
 const allowedOrigins = [
   process.env.CORS_ORIGIN,
-  'https://recon-system-frontend.onrender.com',
+  'https://ai-based-reconciliation-system-frontend.onrender.com',
   'http://localhost:3000',
   'http://localhost:5173',
   'http://localhost:5000'

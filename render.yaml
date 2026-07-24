@@ -27,7 +27,7 @@ services:
       - key: JWT_COOKIE_EXPIRE
         value: "7"
       - key: CORS_ORIGIN
-        value: "https://recon-system-frontend.onrender.com"
+        value: "https://ai-based-reconciliation-system-frontend.onrender.com"
       - key: COOKIE_SECRET
         sync: false
 
