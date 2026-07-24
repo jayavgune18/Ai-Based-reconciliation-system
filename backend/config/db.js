@@ -1,13 +1,31 @@
 const mongoose = require('mongoose');
 
+let retryCount = 0;
+const MAX_RETRIES = 3;
+
 const connectDB = async () => {
   try {
     // Support both MONGO_URI and MONGODB_URI environment variables
-    const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/ai-recon-db';
-    if (!process.env.MONGO_URI && process.env.MONGODB_URI) {
-      console.log('📌 Using MONGODB_URI environment variable (fallback from MONGO_URI)');
+    const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+    
+    // Log diagnostic info
+    console.log(`🔍 NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
+    console.log(`🔍 MONGO_URI defined: ${!!process.env.MONGO_URI}`);
+    console.log(`🔍 MONGODB_URI defined: ${!!process.env.MONGODB_URI}`);
+    
+    if (!mongoUri) {
+      console.error('❌ CRITICAL: No MongoDB URI found! Set MONGO_URI or MONGODB_URI in environment variables.');
+      console.error('   In Render dashboard: Environment > Environment Variables > Add MONGO_URI');
+      if (process.env.NODE_ENV === 'production') {
+        process.exit(1);
+      }
+      // In development, fallback to localhost
+      console.log('⚠️  Falling back to localhost MongoDB for development...');
     }
-    const conn = await mongoose.connect(mongoUri, {
+    
+    const uri = mongoUri || 'mongodb://localhost:27017/ai-recon-db';
+    
+    const conn = await mongoose.connect(uri, {
       // Connection timeout options
       serverSelectionTimeoutMS: 15000,      // 15 seconds to select server
       socketTimeoutMS: 45000,               // 45 seconds for socket operations
@@ -27,6 +45,7 @@ const connectDB = async () => {
     
     console.log(`🚀 MongoDB Connected: ${conn.connection.host}`);
     console.log(`📊 Database: ${conn.connection.db.name}`);
+    retryCount = 0; // Reset retry counter on successful connection
     
     // Handle connection events
     mongoose.connection.on('disconnected', () => {
@@ -39,11 +58,19 @@ const connectDB = async () => {
     
     return conn;
   } catch (error) {
-    console.error(`❌ Database Connection Error: ${error.message}`);
-    console.log('⚠️ Retrying connection in 5 seconds...');
+    retryCount++;
+    console.error(`❌ Database Connection Error (attempt ${retryCount}/${MAX_RETRIES}): ${error.message}`);
     
-    // Retry connection after 5 seconds
-    setTimeout(connectDB, 5000);
+    if (retryCount >= MAX_RETRIES) {
+      console.error('❌ Max retries reached. Could not connect to MongoDB.');
+      console.error('   Please verify your MongoDB connection string in Render dashboard.');
+      if (process.env.NODE_ENV === 'production') {
+        process.exit(1);
+      }
+    } else {
+      console.log(`⚠️ Retrying connection in 5 seconds... (attempt ${retryCount}/${MAX_RETRIES})`);
+      setTimeout(connectDB, 5000);
+    }
   }
 };
 
