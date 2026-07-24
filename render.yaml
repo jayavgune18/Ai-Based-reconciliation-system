@@ -41,7 +41,7 @@ services:
     staticPublishPath: ./frontend/dist
     envVars:
       - key: VITE_API_BASE_URL
-        value: "https://recon-system-backend.onrender.com"
+        value: "https://ai-based-reconciliation-system-backend.onrender.com"
       - key: VITE_ENV
         value: production
     headers:
