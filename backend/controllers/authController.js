@@ -65,7 +65,9 @@ const registerUser = async (req, res, next) => {
       return next(new Error('Password must be at least 6 characters.'));
     }
 
-    const userExists = await User.findOne({ email });
+    // Normalize email to lowercase for consistent matching (schema has lowercase:true)
+    const normalizedEmail = email.toLowerCase().trim();
+    const userExists = await User.findOne({ email: normalizedEmail });
 
     if (userExists) {
       res.statusCode = 400;
@@ -78,7 +80,7 @@ const registerUser = async (req, res, next) => {
 
     const user = await User.create({
       name,
-      email,
+      email: normalizedEmail,
       password,
       role: userRole,
     });
@@ -113,7 +115,9 @@ const loginUser = async (req, res, next) => {
       return next(new Error('Database is not connected. Please check that MongoDB is running and the connection string is correct.'));
     }
 
-    const user = await User.findOne({ email }).select('+password');
+    // Normalize email to lowercase to match stored value (schema has lowercase:true)
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail }).select('+password');
 
     if (!user) {
       res.statusCode = 401;
@@ -255,7 +259,8 @@ const sendOtp = async (req, res, next) => {
       return next(new Error('Please provide an email address.'));
     }
 
-    const user = await User.findOne({ email });
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       res.statusCode = 404;
       return next(new Error('No account found with this email. Please register first.'));
@@ -303,7 +308,8 @@ const verifyOtp = async (req, res, next) => {
       return next(new Error('Please provide email and OTP.'));
     }
 
-    const user = await User.findOne({ email });
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
       res.statusCode = 404;

@@ -32,12 +32,13 @@ const updateProfile = async (req, res, next) => {
 
     // Update email if provided (check uniqueness)
     if (email && email !== user.email) {
-      const existingUser = await User.findOne({ email, _id: { $ne: user._id } });
+      const normalizedEmail = email.toLowerCase().trim();
+      const existingUser = await User.findOne({ email: normalizedEmail, _id: { $ne: user._id } });
       if (existingUser) {
         res.statusCode = 400;
         return next(new Error('Email is already in use by another account.'));
       }
-      user.email = email;
+      user.email = normalizedEmail;
       user.isVerified = false; // Require re-verification on email change
     }
 

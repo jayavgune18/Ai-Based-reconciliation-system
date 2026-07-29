@@ -8,11 +8,16 @@ const keyGenerator = (req) => {
   return req.headers['x-forwarded-for']?.split(',')[0] || req.ip;
 };
 
-// Custom handler to ensure consistent error response format
-const handler = (req, res, next, options) => {
-  res.status(options.statusCode).json({
+// Custom handler to ensure consistent JSON error response format
+// express-rate-limit v7 passes (req, res, next) - options is NOT passed as a parameter
+const handler = (req, res, next) => {
+  // In express-rate-limit v7, the message is available via req.rateLimit
+  const message = req.rateLimit?.message?.message 
+    || req.rateLimit?.message 
+    || 'Too many requests, please try again later.';
+  res.status(429).json({
     success: false,
-    message: options.message.message, // The message is nested in the original config
+    message,
   });
 };
 
