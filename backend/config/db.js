@@ -64,12 +64,12 @@ const connectDB = async () => {
     if (retryCount >= MAX_RETRIES) {
       console.error('❌ Max retries reached. Could not connect to MongoDB.');
       console.error('   Please verify your MongoDB connection string in Render dashboard.');
-      if (process.env.NODE_ENV === 'production') {
-        process.exit(1);
-      }
+      throw error; // Throw so server.js can handle it
     } else {
       console.log(`⚠️ Retrying connection in 5 seconds... (attempt ${retryCount}/${MAX_RETRIES})`);
-      setTimeout(connectDB, 5000);
+      // Wait 5 seconds then retry - return a promise that resolves on success
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      return connectDB();
     }
   }
 };

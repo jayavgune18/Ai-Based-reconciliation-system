@@ -16,6 +16,7 @@ const { apiLimiter } = require('./middlewares/rateLimiter');
 // ==========================================
 // PRODUCTION ENVIRONMENT VALIDATION
 // ==========================================
+
 const requiredEnvVars = ['JWT_SECRET', 'MONGO_URI'];
 if (process.env.NODE_ENV === 'production') {
   const missing = requiredEnvVars.filter(v => !process.env[v] || process.env[v] === 'your_jwt_signing_secret_here');
@@ -43,7 +44,25 @@ const app = express();
 const server = http.createServer(app);
 
 // 1. Establish Mongoose DB Connection
-connectDB();
+// Wait for DB connection before starting the server to prevent
+// "Database is not connected" errors on login/register
+const startServer = async () => {
+  try {
+    await connectDB();
+    
+    // Start listening
+    const PORT = process.env.PORT || 5000;
+    server.listen(PORT, () => {
+      console.log(`🔥 SERVER RUNNING IN ${process.env.NODE_ENV || 'development'} MODE ON PORT ${PORT}`);
+      console.log(`🚀 API Gateway active at: http://localhost:${PORT}/`);
+    });
+  } catch (error) {
+    console.error(`❌ Failed to start server: ${error.message}`);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 // 2. Setup Security & Core Middlewares
 // Helmet for security headers
@@ -151,13 +170,6 @@ app.get('/health', (req, res) => {
 
 // 5. Global Exception Handler Middleware
 app.use(errorHandler);
-
-// Start listening
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`🔥 SERVER RUNNING IN ${process.env.NODE_ENV || 'development'} MODE ON PORT ${PORT}`);
-  console.log(`🚀 API Gateway active at: http://localhost:${PORT}/`);
-});
 
 // Graceful shutdown handler
 const gracefulShutdown = (signal) => {
