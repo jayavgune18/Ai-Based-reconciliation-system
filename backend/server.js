@@ -156,13 +156,14 @@ app.get('/health', (req, res) => {
     2: 'connecting',
     3: 'disconnecting'
   };
+  const isDatabaseConnected = mongoStatus === 1;
   
-  res.json({
-    status: 'healthy',
+  res.status(isDatabaseConnected ? 200 : 503).json({
+    status: isDatabaseConnected ? 'healthy' : 'degraded',
     timestamp: new Date().toISOString(),
     database: {
       status: mongoStatusMap[mongoStatus],
-      connected: mongoStatus === 1
+      connected: isDatabaseConnected
     },
     uptime: process.uptime()
   });
