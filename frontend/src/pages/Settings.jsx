@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../services/api';
+import { Link } from 'react-router-dom';
 import {
   User,
   Save,
@@ -26,11 +27,13 @@ import {
   Monitor,
   Globe,
   Clock,
+  Zap,
 } from 'lucide-react';
 
 // ─── Tab Configuration ───────────────────────────────────────────────────────
 const TABS = [
   { id: 'profile', label: 'Profile', icon: User },
+  { id: 'billing', label: 'Subscription & Plans', icon: Zap },
   { id: 'storage', label: 'Storage', icon: HardDrive },
   { id: 'password', label: 'Password', icon: Key },
   { id: 'sessions', label: 'Devices & Sessions', icon: Smartphone },
@@ -625,6 +628,39 @@ export const Settings = () => {
                       </>
                     )}
                   </p>
+                </div>
+              </div>
+            </SectionCard>
+          </div>
+        )}
+
+        {activeTab === 'billing' && (
+          <div className="max-w-2xl space-y-6">
+            <SectionCard title="Active Plan & Usage Capacity" description="Manage your subscription tier, billing frequency, and real-time usage quotas.">
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 text-white shadow-lg space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                    {profile.subscriptionTier ? profile.subscriptionTier.toUpperCase() : 'ACTIVE'} TIER
+                  </span>
+                  <span className="text-xs text-slate-300">
+                    Razorpay Auto-Renew Active
+                  </span>
+                </div>
+                <div>
+                  <h4 className="text-xl font-bold">AI Financial Reconciliation Plan</h4>
+                  <p className="text-xs text-slate-300 mt-1">
+                    Manage tier upgrades, toggle monthly/annual cycles (save 17%), monitor monthly job quotas, and download verified tax invoices.
+                  </p>
+                </div>
+                <div className="pt-2">
+                  <Link
+                    to="/subscriptions"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm transition-all shadow-md shadow-cyan-500/20"
+                  >
+                    <Zap size={16} />
+                    <span>Open Subscription & Billing Dashboard</span>
+                    <ChevronRight size={16} />
+                  </Link>
                 </div>
               </div>
             </SectionCard>

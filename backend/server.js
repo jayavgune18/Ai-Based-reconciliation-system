@@ -38,6 +38,8 @@ const reconRoutes = require('./routes/reconRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+const subscriptionRoutes = require('./routes/subscriptionRoutes');
 
 // Initialize Express App
 const app = express();
@@ -137,6 +139,8 @@ app.use('/api/reconciliation', reconRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/payment', paymentRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 
 
 // Base Route

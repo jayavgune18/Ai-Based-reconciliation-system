@@ -4,9 +4,10 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
+import { Link } from 'react-router-dom';
 import { 
   ShieldAlert, Award, FileSpreadsheet, ListTodo,
-  ArrowUp, ArrowDown, Clock
+  ArrowUp, ArrowDown, Clock, Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -133,6 +134,24 @@ export const Dashboard = () => {
             <ArrowUp size={16} className="text-emerald-300" />
             <span>AI engine active</span>
           </div>
+        </div>
+
+        <div className="mt-5 pt-4 border-t border-cyan-400/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase bg-cyan-300 text-slate-950">
+              {user?.subscriptionTier ? user.subscriptionTier.toUpperCase() : 'FREE'} PLAN
+            </span>
+            <span className="text-xs text-cyan-100">
+              Instant AI fuzzy matching, fraud alerts, and verified GST invoice billing.
+            </span>
+          </div>
+          <Link
+            to="/subscriptions"
+            className="text-xs font-bold px-3.5 py-1.5 rounded-lg bg-white text-slate-900 hover:bg-cyan-50 transition-colors shadow-sm inline-flex items-center gap-1.5 shrink-0 self-start sm:self-auto"
+          >
+            <Zap size={13} className="text-cyan-600" />
+            <span>Manage Plan & Limits</span>
+          </Link>
         </div>
       </div>
 

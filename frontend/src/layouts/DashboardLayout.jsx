@@ -16,8 +16,11 @@ import {
   User as UserIcon,
   Bell,
   ChevronDown,
-  Users,
-  Shield
+  CreditCard,
+  Scale,
+  Zap,
+  Shield,
+  Users
 } from 'lucide-react';
 
 export const DashboardLayout = ({ children }) => {
@@ -34,6 +37,8 @@ export const DashboardLayout = ({ children }) => {
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Reconcile Workbench', path: '/workbench', icon: RefreshCcw },
+    { name: 'Subscriptions & Plans', path: '/subscriptions', icon: Zap, highlight: true },
+    { name: 'Gateway Recon', path: '/payment-recon', icon: Scale },
     { name: 'Fraud Center', path: '/fraud', icon: ShieldAlert, badge: true },
     { name: 'Audit Logs', path: '/audit', icon: History },
     { name: 'Settings', path: '/settings', icon: SettingsIcon },
@@ -149,6 +154,11 @@ export const DashboardLayout = ({ children }) => {
                 {item.badge && (
                   <span className={`px-1.5 py-0.5 text-[10px] rounded-full font-bold ${isActive ? 'bg-white text-cyan-500' : 'bg-red-500/10 text-red-500'}`}>
                     Live
+                  </span>
+                )}
+                {item.highlight && (
+                  <span className={`px-1.5 py-0.5 text-[10px] rounded-full font-bold uppercase ${isActive ? 'bg-white text-cyan-600' : 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400'}`}>
+                    {user?.subscriptionTier ? user.subscriptionTier.toUpperCase() : 'PLAN'}
                   </span>
                 )}
               </Link>

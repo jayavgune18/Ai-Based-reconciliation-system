@@ -2,6 +2,7 @@ const ReconciliationJob = require('../models/ReconciliationJob');
 const ReconciliationMatch = require('../models/ReconciliationMatch');
 const Transaction = require('../models/Transaction');
 const AuditLog = require('../models/AuditLog');
+const Subscription = require('../models/Subscription');
 const ParserService = require('../services/parserService');
 const ReconciliationEngine = require('../services/aiMatcher');
 const FraudDetectorService = require('../services/fraudDetector');
@@ -82,6 +83,21 @@ const uploadAndIngest = async (req, res, next) => {
             alertsCount: fraudAlerts.length,
             alerts: fraudAlerts
           });
+        }
+
+        // Increment user's subscription usage counters
+        try {
+          await Subscription.findOneAndUpdate(
+            { user: req.user._id },
+            {
+              $inc: {
+                'usage.jobsUsedThisMonth': 1,
+                'usage.transactionsProcessedThisMonth': allUploadedTxns.length
+              }
+            }
+          );
+        } catch (subErr) {
+          console.warn('⚠️ Could not update subscription usage:', subErr.message);
         }
 
         // Clean up raw disk files safely

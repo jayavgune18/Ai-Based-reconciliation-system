@@ -185,6 +185,7 @@ const getMe = async (req, res, next) => {
         avatar: userObj.avatar,
         isVerified: userObj.isVerified,
         isActive: userObj.isActive,
+        subscriptionTier: userObj.subscriptionTier || 'free',
         lastLogin: userObj.lastLogin,
         createdAt: userObj.createdAt,
       },

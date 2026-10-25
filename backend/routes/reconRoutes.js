@@ -4,6 +4,7 @@ const { uploadAndIngest, getJobs, getMatchesByJob, resolveMatch, processInvoiceO
 const { protect } = require('../middlewares/authMiddleware');
 const { uploadLimiter } = require('../middlewares/rateLimiter');
 const { upload, handleUpload } = require('../middlewares/uploadMiddleware');
+const { checkReconUsageLimit } = require('../middlewares/usageLimitMiddleware');
 
 // Config double file uploads for Reconciliation (Multer)
 const uploadFields = handleUpload(upload.fields([
@@ -11,7 +12,7 @@ const uploadFields = handleUpload(upload.fields([
   { name: 'internalFile', maxCount: 1 }
 ]));
 
-router.post('/upload', protect, uploadLimiter, uploadFields, uploadAndIngest);
+router.post('/upload', protect, checkReconUsageLimit, uploadLimiter, uploadFields, uploadAndIngest);
 router.post('/ocr', protect, uploadLimiter, handleUpload(upload.single('invoiceFile')), processInvoiceOCR);
 router.get('/jobs', protect, getJobs);
 router.get('/matches/:jobId', protect, getMatchesByJob);

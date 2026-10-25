@@ -12,6 +12,10 @@ const protect = async (req, res, next) => {
   else if (req.signedCookies && req.signedCookies.token) {
     token = req.signedCookies.token;
   }
+  // Fallback to query parameter (useful for direct file downloads like PDF/Excel)
+  else if (req.query && req.query.token) {
+    token = req.query.token;
+  }
 
   if (!token) {
     return res.status(401).json({ success: false, message: 'Not authorized to access this route. No token provided.' });

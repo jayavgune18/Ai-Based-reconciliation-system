@@ -12,6 +12,8 @@ import { FraudAlerts } from './pages/FraudAlerts';
 import { AuditLogs } from './pages/AuditLogs';
 import { Settings } from './pages/Settings';
 import { UserManagement } from './pages/UserManagement';
+import { PaymentReconciliation } from './pages/PaymentReconciliation';
+import { SubscriptionDashboard } from './pages/SubscriptionDashboard';
 
 // Protected Route Guard
 const ProtectedRoute = ({ children }) => {
@@ -71,6 +73,34 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ReconciliationWorkbench />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/payments" 
+              element={<Navigate to="/subscriptions" replace />} 
+            />
+            <Route 
+              path="/subscriptions" 
+              element={
+                <ProtectedRoute>
+                  <SubscriptionDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/subscription" 
+              element={
+                <ProtectedRoute>
+                  <SubscriptionDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/payment-recon" 
+              element={
+                <ProtectedRoute>
+                  <PaymentReconciliation />
                 </ProtectedRoute>
               } 
             />

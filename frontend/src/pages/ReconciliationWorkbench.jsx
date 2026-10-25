@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import apiClient from '../services/api';
 import { 
   FileSpreadsheet, Upload, Download, CheckCircle, AlertTriangle, HelpCircle, FileText, Plus, X, Play
 } from 'lucide-react';
 
 export const ReconciliationWorkbench = () => {
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [selectedJobId, setSelectedJobId] = useState('');
   const [matches, setMatches] = useState([]);
@@ -106,7 +108,14 @@ export const ReconciliationWorkbench = () => {
         }, 3000);
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Ingestion failed');
+      if (err.response?.data?.quotaExceeded) {
+        if (window.confirm(`${err.response.data.message}\n\nWould you like to upgrade your subscription plan now to increase your quota?`)) {
+          setUploadModalOpen(false);
+          navigate('/subscriptions');
+        }
+      } else {
+        alert(err.response?.data?.message || 'Ingestion failed');
+      }
       setUploadProgress(0);
       setUploadStatusMsg('');
     } finally {

@@ -36,6 +36,16 @@ const UserSchema = new mongoose.Schema({
   otpCode: { type: String },
   otpExpires: { type: Date },
   isVerified: { type: Boolean, default: false },
+  // Subscription status
+  subscription: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Subscription'
+  },
+  subscriptionTier: {
+    type: String,
+    enum: ['free', 'starter', 'pro', 'enterprise'],
+    default: 'free'
+  },
   // Account status
   isActive: { type: Boolean, default: true },
   lastLogin: { type: Date },
