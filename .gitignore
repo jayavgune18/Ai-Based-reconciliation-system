@@ -30,3 +30,15 @@ Thumbs.db
 
 # Ignore uploads directory (runtime generated files)
 backend/uploads/
+
+# Ignore agent & AI tooling configs
+.agent/
+.agents/
+.gemini/
+.gsd/
+adapters/
+scripts/
+model_capabilities.yaml
+GSD-STYLE.md
+PROJECT_RULES.md
+VERSION
