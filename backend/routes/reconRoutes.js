@@ -8,9 +8,11 @@ const {
   processInvoiceOCR,
   aiCompareMatch,
   getAiExecutiveSummary,
-  explainAiAnomaly
+  explainAiAnomaly,
+  createManualTransaction,
+  getManualTransactions
 } = require('../controllers/reconController');
-const { protect } = require('../middlewares/authMiddleware');
+const { protect, authorize } = require('../middlewares/authMiddleware');
 const { uploadLimiter } = require('../middlewares/rateLimiter');
 const { upload, handleUpload } = require('../middlewares/uploadMiddleware');
 const { checkReconUsageLimit } = require('../middlewares/usageLimitMiddleware');
@@ -21,16 +23,20 @@ const uploadFields = handleUpload(upload.fields([
   { name: 'internalFile', maxCount: 1 }
 ]));
 
-router.post('/upload', protect, checkReconUsageLimit, uploadLimiter, uploadFields, uploadAndIngest);
-router.post('/ocr', protect, uploadLimiter, handleUpload(upload.single('invoiceFile')), processInvoiceOCR);
+router.post('/upload', protect, authorize('Admin', 'Finance Manager', 'Accountant'), checkReconUsageLimit, uploadLimiter, uploadFields, uploadAndIngest);
+router.post('/ocr', protect, authorize('Admin', 'Finance Manager', 'Accountant'), uploadLimiter, handleUpload(upload.single('invoiceFile')), processInvoiceOCR);
 router.get('/jobs', protect, getJobs);
 router.get('/matches/:jobId', protect, getMatchesByJob);
-router.put('/matches/:matchId/resolve', protect, resolveMatch);
+router.put('/matches/:matchId/resolve', protect, authorize('Admin', 'Finance Manager', 'Accountant'), resolveMatch);
 
 // AI & LLM Reconciliation Endpoints
 router.post('/ai-match', protect, aiCompareMatch);
 router.get('/ai-summary/:jobId', protect, getAiExecutiveSummary);
 router.post('/ai-explain-anomaly', protect, explainAiAnomaly);
+
+// Manual Ledger Transaction Ingestion & Listing
+router.post('/manual-transaction', protect, authorize('Admin', 'Finance Manager', 'Accountant'), createManualTransaction);
+router.get('/manual-transactions', protect, getManualTransactions);
 
 module.exports = router;
 

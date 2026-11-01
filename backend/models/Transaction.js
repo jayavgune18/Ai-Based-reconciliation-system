@@ -34,8 +34,17 @@ const TransactionSchema = new mongoose.Schema({
   uploadJobId: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'ReconciliationJob', 
-    required: true,
+    required: false,
     index: true
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  type: {
+    type: String,
+    enum: ['debit', 'credit'],
+    default: 'debit'
   },
   status: { 
     type: String, 

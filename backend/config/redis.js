@@ -43,46 +43,50 @@ const memoryFallback = new MemoryCacheFallback();
 let redisClient = null;
 let isConnected = false;
 
-const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+const redisUrl = process.env.REDIS_URL || (process.env.REDIS_HOST ? `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT || 6379}` : null);
 
-try {
-  redisClient = new Redis(redisUrl, {
-    maxRetriesPerRequest: 1,
-    retryStrategy(times) {
-      if (times > 3) {
-        // Stop retrying aggressively if Redis is not running locally
-        return null;
-      }
-      return Math.min(times * 200, 1000);
-    },
-    enableOfflineQueue: false,
-    lazyConnect: true
-  });
+// Only attempt connecting to Redis if explicitly configured or in production/docker
+if (process.env.REDIS_URL || process.env.REDIS_HOST) {
+  try {
+    redisClient = new Redis(redisUrl, {
+      maxRetriesPerRequest: 1,
+      retryStrategy(times) {
+        if (times > 2) {
+          return null; // Stop retrying immediately if Redis is unreachable
+        }
+        return 1000;
+      },
+      enableOfflineQueue: false,
+      lazyConnect: true,
+      connectTimeout: 1500
+    });
 
-  redisClient.connect().then(() => {
-    isConnected = true;
-    console.log(`⚡ Connected to Redis Server at ${redisUrl}`);
-  }).catch((err) => {
+    redisClient.on('error', () => {
+      isConnected = false;
+    });
+
+    redisClient.on('connect', () => {
+      isConnected = true;
+      console.log('⚡ Redis connected successfully.');
+    });
+
+    redisClient.on('close', () => {
+      isConnected = false;
+    });
+
+    redisClient.connect().then(() => {
+      isConnected = true;
+      console.log(`⚡ Connected to Redis Server at ${redisUrl}`);
+    }).catch(() => {
+      isConnected = false;
+      console.log('ℹ️ Redis server unreachable. Ultra-fast In-Memory cache & asynchronous queue active.');
+    });
+  } catch (err) {
     isConnected = false;
-    console.warn(`ℹ️ Redis server not reachable (${err.message}). Using high-performance In-Memory cache fallback.`);
-  });
-
-  redisClient.on('connect', () => {
-    isConnected = true;
-    console.log('⚡ Redis connected successfully.');
-  });
-
-  redisClient.on('error', (err) => {
-    isConnected = false;
-    // Suppress spamming logs when Redis is offline in standalone development
-  });
-
-  redisClient.on('close', () => {
-    isConnected = false;
-  });
-} catch (err) {
-  isConnected = false;
-  console.warn('ℹ️ Redis initialization fallback to In-Memory cache.');
+  }
+} else {
+  // Standalone development mode without REDIS_URL/REDIS_HOST
+  console.log('ℹ️ Redis host not specified. Using high-performance In-Memory cache & in-process async queue.');
 }
 
 /**

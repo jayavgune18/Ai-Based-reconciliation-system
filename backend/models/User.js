@@ -25,8 +25,8 @@ const UserSchema = new mongoose.Schema({
   },
   role: { 
     type: String, 
-    enum: ['user', 'admin'], 
-    default: 'user' 
+    enum: ['Admin', 'Finance Manager', 'Accountant', 'Viewer', 'admin', 'user'], 
+    default: 'Accountant' 
   },
   // OAuth fields
   googleId: { type: String, index: true },

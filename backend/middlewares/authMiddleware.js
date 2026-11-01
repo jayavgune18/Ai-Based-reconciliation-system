@@ -37,17 +37,48 @@ const protect = async (req, res, next) => {
   }
 };
 
-const authorize = (...roles) => {
+const ROLE_HIERARCHY = {
+  admin: ['admin', 'finance manager', 'accountant', 'viewer', 'user'],
+  'finance manager': ['finance manager', 'accountant', 'viewer', 'user'],
+  accountant: ['accountant', 'viewer', 'user'],
+  user: ['accountant', 'viewer', 'user'],
+  viewer: ['viewer']
+};
+
+const authorize = (...allowedRoles) => {
   return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    if (!req.user) {
       return res.status(403).json({ 
         success: false, 
-        message: req.user 
-          ? `Access denied. Role '${req.user.role}' does not have permission. Required role: ${roles.join(' or ')}.` 
-          : 'Access denied. Authentication required.'
+        message: 'Access denied. Authentication required.' 
       });
     }
-    next();
+
+    const userRole = (req.user.role || 'viewer').toLowerCase().trim();
+    const normalizedAllowed = allowedRoles.map(r => r.toLowerCase().trim());
+
+    // Super-admin bypass
+    if (userRole === 'admin') {
+      return next();
+    }
+
+    // Direct match
+    if (normalizedAllowed.includes(userRole)) {
+      return next();
+    }
+
+    // Hierarchy check: check if user's role encompasses any of the allowed roles
+    const accessibleRoles = ROLE_HIERARCHY[userRole] || [userRole];
+    const hasPermission = normalizedAllowed.some(allowed => accessibleRoles.includes(allowed));
+
+    if (hasPermission) {
+      return next();
+    }
+
+    return res.status(403).json({ 
+      success: false, 
+      message: `Access denied. Role '${req.user.role}' lacks sufficient privileges. Required: ${allowedRoles.join(', ')}.` 
+    });
   };
 };
 

@@ -4,52 +4,68 @@ const { redisClient, isRedisConnected } = require('../config/redis');
 let reconQueue = null;
 let reportQueue = null;
 
-const redisConnection = {
+const redisConnection = (process.env.REDIS_URL || process.env.REDIS_HOST) ? {
   host: process.env.REDIS_HOST || '127.0.0.1',
   port: parseInt(process.env.REDIS_PORT || '6379', 10),
   password: process.env.REDIS_PASSWORD || undefined,
   maxRetriesPerRequest: null,
   enableReadyCheck: false
+} : null;
+
+const getReconQueue = () => {
+  if (!isRedisConnected() || !redisConnection) return null;
+  if (!reconQueue) {
+    try {
+      reconQueue = new Queue('reconProcessingQueue', {
+        connection: redisConnection,
+        defaultJobOptions: {
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 2000
+          },
+          removeOnComplete: 100,
+          removeOnFail: 200
+        }
+      });
+      reconQueue.on('error', () => {}); // silence ioredis reconnection logs
+      console.log('📦 BullMQ Queue active: reconProcessingQueue');
+    } catch (err) {
+      reconQueue = null;
+    }
+  }
+  return reconQueue;
 };
 
-// Initialize BullMQ Queues safely
-try {
-  reconQueue = new Queue('reconProcessingQueue', {
-    connection: redisConnection,
-    defaultJobOptions: {
-      attempts: 3,
-      backoff: {
-        type: 'exponential',
-        delay: 2000
-      },
-      removeOnComplete: 100,
-      removeOnFail: 200
+const getReportQueue = () => {
+  if (!isRedisConnected() || !redisConnection) return null;
+  if (!reportQueue) {
+    try {
+      reportQueue = new Queue('reportGenerationQueue', {
+        connection: redisConnection,
+        defaultJobOptions: {
+          attempts: 2,
+          removeOnComplete: 50,
+          removeOnFail: 100
+        }
+      });
+      reportQueue.on('error', () => {}); // silence ioredis reconnection logs
+    } catch (err) {
+      reportQueue = null;
     }
-  });
-
-  reportQueue = new Queue('reportGenerationQueue', {
-    connection: redisConnection,
-    defaultJobOptions: {
-      attempts: 2,
-      removeOnComplete: 50,
-      removeOnFail: 100
-    }
-  });
-
-  console.log('📦 BullMQ Queues initialized: [reconProcessingQueue, reportGenerationQueue]');
-} catch (err) {
-  console.warn('ℹ️ BullMQ initialization deferred (Redis offline). In-memory processing active.');
-}
+  }
+  return reportQueue;
+};
 
 /**
  * Add Reconciliation Processing Job to BullMQ (or execute in background if Redis is offline)
  * @param {Object} jobData - { jobId, userId, bankTxns, internalTxns, jobName }
  */
 const addReconciliationJob = async (jobData) => {
-  const isRedisUp = isRedisConnected();
-  if (isRedisUp && reconQueue) {
+  const queue = getReconQueue();
+  if (queue) {
     try {
-      const bullJob = await reconQueue.add('processReconciliation', jobData, {
+      const bullJob = await queue.add('processReconciliation', jobData, {
         jobId: `recon_${jobData.jobId}`
       });
       console.log(`🚀 BullMQ: Enqueued recon job ${bullJob.id}`);
@@ -76,10 +92,10 @@ const addReconciliationJob = async (jobData) => {
  * Add Report Generation Job
  */
 const addReportJob = async (reportData) => {
-  const isRedisUp = isRedisConnected();
-  if (isRedisUp && reportQueue) {
+  const queue = getReportQueue();
+  if (queue) {
     try {
-      const bullJob = await reportQueue.add('generateReport', reportData);
+      const bullJob = await queue.add('generateReport', reportData);
       return { queued: true, bullJobId: bullJob.id, mode: 'bullmq' };
     } catch (err) {
       console.warn(`BullMQ report queue failed (${err.message}). Running synchronously.`);
@@ -90,8 +106,8 @@ const addReportJob = async (reportData) => {
 };
 
 module.exports = {
-  reconQueue,
-  reportQueue,
+  getReconQueue,
+  getReportQueue,
   addReconciliationJob,
   addReportJob,
   redisConnection

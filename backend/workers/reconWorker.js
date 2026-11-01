@@ -58,33 +58,52 @@ const processReconJob = async (jobData) => {
 
 let reconWorker = null;
 
-// Initialize BullMQ Worker safely
-try {
-  reconWorker = new Worker(
-    'reconProcessingQueue',
-    async (bullJob) => {
-      return await processReconJob(bullJob.data);
-    },
-    {
-      connection: redisConnection,
-      concurrency: 3
+const initReconWorker = () => {
+  const { isRedisConnected } = require('../config/redis');
+  if (!isRedisConnected() || !redisConnection) {
+    return null;
+  }
+
+  if (!reconWorker) {
+    try {
+      reconWorker = new Worker(
+        'reconProcessingQueue',
+        async (bullJob) => {
+          return await processReconJob(bullJob.data);
+        },
+        {
+          connection: redisConnection,
+          concurrency: 3
+        }
+      );
+
+      reconWorker.on('completed', (job) => {
+        console.log(`🎉 BullMQ Worker: Job ${job.id} completed!`);
+      });
+
+      reconWorker.on('failed', (job, err) => {
+        console.error(`💥 BullMQ Worker: Job ${job?.id} failed: ${err.message}`);
+      });
+
+      reconWorker.on('error', () => {}); // silence connection drops
+
+      console.log('👷 BullMQ Worker listening on [reconProcessingQueue]');
+    } catch (err) {
+      reconWorker = null;
     }
-  );
+  }
+  return reconWorker;
+};
 
-  reconWorker.on('completed', (job) => {
-    console.log(`🎉 BullMQ Worker: Job ${job.id} completed!`);
-  });
-
-  reconWorker.on('failed', (job, err) => {
-    console.error(`💥 BullMQ Worker: Job ${job?.id} failed with error: ${err.message}`);
-  });
-
-  console.log('👷 BullMQ Worker listening on [reconProcessingQueue]');
-} catch (err) {
-  console.warn('ℹ️ BullMQ Worker initialization deferred (Redis offline). In-memory processing active.');
+// Try initializing worker on startup only if Redis is already connected
+if (redisConnection) {
+  const { isRedisConnected } = require('../config/redis');
+  if (isRedisConnected()) {
+    initReconWorker();
+  }
 }
 
 module.exports = {
   processReconJob,
-  reconWorker
+  initReconWorker
 };

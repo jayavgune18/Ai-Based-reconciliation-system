@@ -343,6 +343,108 @@ const explainAiAnomaly = async (req, res, next) => {
   }
 };
 
+/**
+ * 9. Create Manual Internal Ledger Transaction
+ * POST /api/reconciliation/manual-transaction
+ */
+const createManualTransaction = async (req, res, next) => {
+  try {
+    const { transactionId, date, amount, description, category, type } = req.body;
+
+    if (!date || amount === undefined || !description) {
+      res.statusCode = 400;
+      return next(new Error('Date, amount, and description are required fields.'));
+    }
+
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount) || numAmount <= 0) {
+      res.statusCode = 400;
+      return next(new Error('Amount must be a valid positive number.'));
+    }
+
+    const newTxn = await Transaction.create({
+      source: 'internal',
+      transactionId: transactionId ? transactionId.trim() : `MAN-${Date.now()}`,
+      date: new Date(date),
+      amount: numAmount,
+      description: description.trim(),
+      category: category ? category.trim() : 'General Ledger',
+      type: type === 'credit' ? 'credit' : 'debit',
+      status: 'unreconciled',
+      createdBy: req.user._id
+    });
+
+    // Invalidate dashboard stats cache
+    const { deleteCachePattern } = require('../config/redis');
+    await deleteCachePattern('dashboard:*');
+
+    // Audit Log
+    await AuditLog.create({
+      userId: req.user._id,
+      action: 'MANUAL_TRANSACTION_CREATE',
+      details: {
+        transactionId: newTxn.transactionId,
+        amount: newTxn.amount,
+        type: newTxn.type,
+        description: newTxn.description
+      },
+      ipAddress: req.ip
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Manual internal ledger transaction recorded successfully.',
+      transaction: newTxn
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * 10. Get Manual Internal Ledger Transactions
+ * GET /api/reconciliation/manual-transactions
+ */
+const getManualTransactions = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page || '1', 10);
+    const limit = parseInt(req.query.limit || '50', 10);
+    const search = req.query.search || '';
+
+    const query = {
+      source: 'internal'
+    };
+
+    if (search) {
+      query.$or = [
+        { description: { $regex: search, $options: 'i' } },
+        { transactionId: { $regex: search, $options: 'i' } },
+        { category: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const total = await Transaction.countDocuments(query);
+    const transactions = await Transaction.find(query)
+      .sort({ date: -1, createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate('createdBy', 'name email');
+
+    res.json({
+      success: true,
+      transactions,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   uploadAndIngest,
   getJobs,
@@ -351,6 +453,8 @@ module.exports = {
   processInvoiceOCR,
   aiCompareMatch,
   getAiExecutiveSummary,
-  explainAiAnomaly
+  explainAiAnomaly,
+  createManualTransaction,
+  getManualTransactions
 };
 

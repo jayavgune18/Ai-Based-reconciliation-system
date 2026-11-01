@@ -1,22 +1,17 @@
-# AI-Based Reconciliation System 
+# ReconcileAI Pro: Payment Gateway & Financial Reconciliation System
 
-An enterprise-grade, production-ready double-entry financial reconciliation application built using the MERN stack with dynamic AI-powered transaction matching, Razorpay payment gateway reconciliation, subscription billing management, risk controls, and automated reporting.
-
-Designed and optimized to be suitable for Final Year Engineering projects, placement reviews, and technical showcase portfolios.
+A production-ready MERN application that reconciles **Razorpay gateway settlements** against internal ledgers, detects mismatched, duplicate, and orphan transactions, and generates audit-ready PDF/Excel reports. It also includes AI-powered fuzzy matching, fraud heuristics, subscription billing, and Redis/BullMQ-backed performance.
 
 ---
 
 ## 📚 Table of Contents
 
-- [Live Demo](#️-live-demo)
+- [Live Demo](#-live-demo)
 - [Key Features](#-key-features)
 - [Tech Stack](#-tech-stack)
 - [Project Structure](#-system-folder-structure)
-- [Screenshot Overview](#-screenshots)
-- [Getting Started & Local Setup](#-getting-started--local-setup)
-  - [Environment Setup](#prerequisites)
-  - [Server Setup](#step-1-set-up-the-backend)
-  - [Client Setup](#step-2-set-up-the-frontend)
+- [Screenshots](#-screenshots)
+- [Getting Started](#-getting-started--local-setup)
 - [Security Architecture](#-security-architecture)
 - [Contact](#-contact)
 
@@ -24,17 +19,17 @@ Designed and optimized to be suitable for Final Year Engineering projects, place
 
 ## 🛰️ Live Demo
 
-Check out the live portfolio here: [🔗 View Portfolio](https://ai-based-reconciliation-system-frontend.onrender.com)
+[🔗 View Live Demo](https://ai-based-reconciliation-system-frontend.onrender.com)
 
 ---
 
 ## 🛠 Tech Stack
 
-- **Frontend**: React.js, Tailwind CSS, Vite, Recharts, Lucide Icons, Axios, React Router v6.
-- **Backend**: Node.js, Express.js, Socket.IO, Multer, PDFKit, XLSX, CSV-Parser, Fuse.js.
-- **Database**: MongoDB & Mongoose (with index optimizations).
-- **Authentication**: JWT Authorization, bcrypt password hashing, and role-based route security (Admin/User).
-- **Payments**: Razorpay Payment Gateway (Orders, Webhooks, Subscriptions, Invoice generation).
+- **Frontend**: React.js, TypeScript, Tailwind CSS, Vite, Recharts, Lucide Icons, Axios, React Router v6
+- **Backend**: Node.js, Express.js, TypeScript, Socket.IO, Multer, PDFKit, XLSX, CSV-Parser, Fuse.js
+- **Database & Queue**: MongoDB with Mongoose (index optimizations), Redis (caching), BullMQ (background job processing)
+- **Authentication**: JWT, bcrypt password hashing, role-based route security (Admin/User)
+- **Payments**: Razorpay (Orders, Webhooks, Subscriptions, Invoice generation)
 
 ---
 
@@ -61,7 +56,6 @@ ai-recon-system/
     │   └── App.jsx         # Routes definition
     ├── tailwind.config.js
     └── package.json
-
 ```
 
 ---
@@ -106,65 +100,76 @@ ai-recon-system/
 
 ## 🚀 Key Features
 
-### 1. **Hybrid AI Matching Engine**
-- Calculates multi-pass transaction matching:
-  1. **Deterministic filter**: Scans matching external Transaction reference IDs and perfect Amount/Date fits.
-  2. **Character N-Gram Cosine Similarity**: Measures spelling and word arrangement similarity (e.g. `AMAZONPAY INDIA` ↔ `Amazon Pay`).
-  3. **Jaro-Winkler & Levenshtein Distances**: Provides highly accurate string proximity scores.
-- Assigns a dynamic **Confidence Score %** and compiles natural-language **AI Explanations** for match validations.
+### 1. **Razorpay Payments & Gateway Reconciliation**
+- Supports **UPI, Cards, and NetBanking** with secure backend order creation.
+- **HMAC-SHA256 signature verification** and **idempotency protection** prevent forged events and duplicate payment processing.
+- Reconciliation engine cross-verifies **gateway settlements against internal ledgers**, classifying each row as Matched, Amount Mismatch, Duplicate, Orphan Gateway, or Missing Payment.
+- Live audit sync with exportable **PDF** and **Excel** reports.
 
-### 2. **Razorpay Gateway Reconciliation**
-- Real-time reconciliation comparing **Razorpay gateway settlements** against company internal ledgers.
-- Automatically flags **amount discrepancies**, **duplicate charges**, and **orphan gateway entries**.
-- Tabular view with per-row classification: Matched, Amount Mismatch, Duplicates, Orphan Gateway, and Missing Payment.
-- Live Audit Sync with exportable **PDF** and **Excel** reconciliation reports.
+### 2. **Hybrid AI Matching Engine**
+- Multi-pass transaction matching:
+  1. **Deterministic filter**: matches on external transaction reference IDs and exact amount/date fits.
+  2. **Character N-Gram Cosine Similarity**: measures spelling and word-arrangement similarity (e.g. `AMAZONPAY INDIA` ↔ `Amazon Pay`).
+  3. **Jaro-Winkler & Levenshtein distances**: accurate string proximity scoring.
+- Assigns a dynamic **Confidence Score %** with natural-language **AI explanations** for each match.
 
-### 3. **Subscription Billing & Plan Management**
-- Four-tier subscription model: **Free Starter**, **Starter Plan (₹999/mo)**, **Professional Plan (₹2,999/mo)**, and **Enterprise Sync (₹7,999/mo)**.
-- Live **monthly usage quotas** with real-time progress bars for Reconciliation Jobs, Transaction Volume, and AI Fuzzy Matching Checks.
-- Integrated **Razorpay checkout** for plan upgrades and downgrades with webhook-driven status updates.
-- **Billing History** view with downloadable tax invoices and auto-generated PDF receipts.
-- Usage Limit Middleware enforces plan quotas per API route, returning quota-exceeded errors when limits are reached.
+### 3. **Performance: Redis Caching & BullMQ**
+- **Redis caching** optimizes data retrieval for dashboards and analytics.
+- **BullMQ background processing** handles heavy reconciliation jobs off the request cycle.
+- **Socket.IO** streams real-time progress and transaction updates to the dashboard.
 
-### 4. **Continuous Risk Heuristics (Fraud Detection)**
-- **Velocity Spikes**: Flags multiple identical debit transactions occurring within a 1-hour window.
-- **Double Debits**: Alarms users if the bank has processed duplicate transfers within a 24-hour timeframe.
-- **Statistical Outliers**: Employs standard deviation scoring (Z-Score > 2.5) to isolate extreme anomalous transaction amounts dynamically.
+### 4. **Subscription Billing & Plan Management**
+- Four tiers: **Free Starter**, **Starter (₹999/mo)**, **Professional (₹2,999/mo)**, and **Enterprise Sync (₹7,999/mo)**.
+- Live **monthly usage quotas** with progress bars for Reconciliation Jobs, Transaction Volume, and AI Fuzzy Matching Checks.
+- **Razorpay checkout** for upgrades and downgrades with webhook-driven status updates.
+- **Billing history** with downloadable tax invoices and auto-generated PDF receipts.
+- Usage Limit Middleware enforces quotas per API route.
 
-### 5. **Structured Ingestion & Processing**
-- Features a dropzone to drag-and-drop CSV or Excel sheets.
-- **Dynamic Headers Normalizer**: Auto-detects and aligns mismatching column headers (e.g., matching "UTR No", "Ref ID", or "Transaction No" to the schema's `transactionId`).
-- **Invoice OCR extraction**: Mock pipeline demonstrating Tesseract.js text extraction from invoice receipts.
+### 5. **Continuous Risk Heuristics (Fraud Detection)**
+- **Velocity Spikes**: flags multiple identical debits within a 1-hour window.
+- **Double Debits**: alerts on duplicate transfers within 24 hours.
+- **Statistical Outliers**: Z-Score (> 2.5) detection of anomalous transaction amounts.
 
-### 6. **Sharing & Permissions**
-- **Share** reconciliation files via email (registered users) or direct link (guest users).
-- **Role-based access**: Assign **Viewer** (read-only) or **Editor** (modify/re-run) permissions.
-- **Dashboard** with *Shared by Me* and *Shared with Me* views + real-time permission updates.
-- **Activity logs** track share events; **access revocation** is instant.
+### 6. **Structured Ingestion & Processing**
+- Drag-and-drop CSV and Excel upload.
+- **Dynamic Headers Normalizer**: auto-maps mismatched column headers (e.g. "UTR No", "Ref ID", "Transaction No" → `transactionId`).
+- **Invoice OCR extraction**: demo pipeline using Tesseract.js for text extraction from receipts.
 
-### 7. **Enterprise Audit & Exporters**
-- Export **PDF Reconciliation Reports** with job summaries and match pairs.
-- Generate **multi-sheet Excel** files for bookkeeping.
-- Full **Audit Log** tracking all user actions.
+### 7. **Sharing & Permissions**
+- Share reconciliation files via email (registered users) or direct link (guest users).
+- **Viewer** (read-only) and **Editor** (modify/re-run) roles.
+- *Shared by Me* and *Shared with Me* views with real-time permission updates.
+- Activity logs track share events; access revocation is instant.
+
+### 8. **Audit & Exports**
+- **PDF reconciliation reports** with job summaries and match pairs.
+- **Multi-sheet Excel** exports for bookkeeping.
+- Full **audit log** of all user actions.
 
 ---
 
 ## 🏃 Getting Started & Local Setup
 
 ### **Prerequisites**
-- Install Node.js (v18 or higher)
-- Run a local MongoDB server (`mongodb://localhost:27017`) or configure a MongoDB Atlas connection string.
-- Create a [Razorpay](https://razorpay.com) account and generate Test API keys.
+- Node.js (v18 or higher)
+- MongoDB (local at `mongodb://localhost:27017` or a MongoDB Atlas connection string)
+- Redis server (required for caching and BullMQ)
+- A [Razorpay](https://razorpay.com) account with Test API keys
 
-### **Step 1: Set up the Backend**
+### **Step 1: Backend**
 1. Navigate to the backend folder:
    ```bash
    cd backend
    ```
-2. Configure your environment variables (copy from `.env.example`):
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Configure environment variables (copy from `.env.example`):
    ```ini
    PORT=
    MONGO_URI=
+   REDIS_URL=
    JWT_SECRET=
    NODE_ENV=
 
@@ -173,42 +178,47 @@ ai-recon-system/
    RAZORPAY_KEY_SECRET=YourTestKeySecretHere
    RAZORPAY_WEBHOOK_SECRET=YourRazorpayWebhookSecretHere
    ```
-3. Run the DB Seeder to populate initial data, default accounts, and graphs:
+4. Seed initial data and default accounts:
    ```bash
    npm run seed
    ```
-4. Start the development API server:
+5. Start the development server:
    ```bash
    npm run dev
    ```
 
-### **Step 2: Set up the Frontend**
+### **Step 2: Frontend**
 1. Navigate to the frontend folder:
    ```bash
    cd ../frontend
    ```
-2. Start the Vite React client:
+2. Install dependencies and start the Vite client:
    ```bash
+   npm install
    npm run dev
    ```
-3. Access the portal at: `http://localhost:3000/`
+3. Open `http://localhost:3000/`
 
 ---
 
 ## 🔒 Security Architecture
 
-1. **Authentication**: JWT token signatures with short TTL, mapped directly to secure Axios request headers.
-2. **API Rate Limiter**: Limits uploads to 20 sheets per 5 minutes per IP to prevent storage flooding.
-3. **Usage Limit Middleware**: Enforces per-plan quotas (reconciliation jobs, transaction volume) at the route level before processing begins.
-4. **Data Sanitization**: Mongoose schema compilations and parameter sanitization to neutralize NoSQL injections.
-5. **Header Hardening**: Leverages `Helmet` to obscure internal Express fingerprints.
-6. **Share Link Tokens**: Unique, expirable tokens for guest share links with optional passphrase protection.
-7. **Razorpay Webhook Verification**: HMAC-SHA256 signature validation on all incoming payment webhooks to prevent forged events.
+1. **Authentication**: JWT signatures with short TTL, attached to Axios request headers.
+2. **Razorpay Webhook Verification**: HMAC-SHA256 signature validation on all incoming webhooks to block forged events.
+3. **Idempotency Protection**: prevents double-charging and duplicate payment processing.
+4. **API Rate Limiter**: limits uploads to 20 sheets per 5 minutes per IP.
+5. **Usage Limit Middleware**: enforces per-plan quotas at the route level before processing begins.
+6. **Data Sanitization**: Mongoose schema validation and parameter sanitization against NoSQL injection.
+7. **Header Hardening**: `Helmet` to obscure Express fingerprints.
+8. **Share Link Tokens**: unique, expirable tokens for guest links with optional passphrase protection.
 
 ---
 
 ## 📬 Contact
 
-Feel free to reach out to me:
+**Jay Avgune** · Full Stack Developer (MERN)
 
-- [LinkedIn](https://www.linkedin.com/in/jay-avgune-1316b323a?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app)
+- 💼 [LinkedIn](https://www.linkedin.com/in/jay-avgune-1316b323a)
+- 🐙 [GitHub](https://github.com/jayavgune18)
+- 🌐 [Portfolio](https://jay-avgune.netlify.app/)
+- 📧 [avgunejay@gmail.com](mailto:avgunejay@gmail.com)

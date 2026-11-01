@@ -49,7 +49,12 @@ const connectDB = async () => {
     
     // Handle connection events
     mongoose.connection.on('disconnected', () => {
-      console.warn('⚠️ MongoDB disconnected');
+      console.warn('⚠️ MongoDB disconnected. Attempting auto-reconnect...');
+      setTimeout(() => {
+        if (mongoose.connection.readyState === 0) {
+          connectDB().catch(err => console.error('MongoDB auto-reconnect attempt failed:', err.message));
+        }
+      }, 3000);
     });
     
     mongoose.connection.on('error', (err) => {

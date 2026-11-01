@@ -50,8 +50,18 @@ const registerUser = async (req, res, next) => {
     // Check MongoDB connection state before querying
     const mongoose = require('mongoose');
     if (mongoose.connection.readyState !== 1) {
-      res.statusCode = 503;
-      return next(new Error('Database is not connected. Please check that MongoDB is running and the connection string is correct.'));
+      if (mongoose.connection.readyState === 2) {
+        // State is connecting, wait up to 1.5s for ready
+        await new Promise(r => setTimeout(r, 1500));
+      } else if (mongoose.connection.readyState === 0) {
+        try {
+          const connectDB = require('../config/db');
+          await connectDB();
+        } catch (e) {
+          res.statusCode = 503;
+          return next(new Error('Database is temporarily unavailable. Please retry in a few moments.'));
+        }
+      }
     }
 
     if (!name || !email || !password) {
@@ -111,8 +121,18 @@ const loginUser = async (req, res, next) => {
     // Check MongoDB connection state before querying
     const mongoose = require('mongoose');
     if (mongoose.connection.readyState !== 1) {
-      res.statusCode = 503;
-      return next(new Error('Database is not connected. Please check that MongoDB is running and the connection string is correct.'));
+      if (mongoose.connection.readyState === 2) {
+        // State is connecting, wait up to 1.5s for ready
+        await new Promise(r => setTimeout(r, 1500));
+      } else if (mongoose.connection.readyState === 0) {
+        try {
+          const connectDB = require('../config/db');
+          await connectDB();
+        } catch (e) {
+          res.statusCode = 503;
+          return next(new Error('Database is temporarily unavailable. Please retry in a few moments.'));
+        }
+      }
     }
 
     // Normalize email to lowercase to match stored value (schema has lowercase:true)
