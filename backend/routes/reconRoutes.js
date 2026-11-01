@@ -1,6 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { uploadAndIngest, getJobs, getMatchesByJob, resolveMatch, processInvoiceOCR } = require('../controllers/reconController');
+const { 
+  uploadAndIngest, 
+  getJobs, 
+  getMatchesByJob, 
+  resolveMatch, 
+  processInvoiceOCR,
+  aiCompareMatch,
+  getAiExecutiveSummary,
+  explainAiAnomaly
+} = require('../controllers/reconController');
 const { protect } = require('../middlewares/authMiddleware');
 const { uploadLimiter } = require('../middlewares/rateLimiter');
 const { upload, handleUpload } = require('../middlewares/uploadMiddleware');
@@ -18,4 +27,10 @@ router.get('/jobs', protect, getJobs);
 router.get('/matches/:jobId', protect, getMatchesByJob);
 router.put('/matches/:matchId/resolve', protect, resolveMatch);
 
+// AI & LLM Reconciliation Endpoints
+router.post('/ai-match', protect, aiCompareMatch);
+router.get('/ai-summary/:jobId', protect, getAiExecutiveSummary);
+router.post('/ai-explain-anomaly', protect, explainAiAnomaly);
+
 module.exports = router;
+

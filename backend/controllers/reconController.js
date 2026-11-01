@@ -7,6 +7,8 @@ const ParserService = require('../services/parserService');
 const ReconciliationEngine = require('../services/aiMatcher');
 const FraudDetectorService = require('../services/fraudDetector');
 const { notifyJobUpdate, broadcastFraudAlert } = require('../config/socket');
+const { addReconciliationJob } = require('../queues/reconQueue');
+const OpenAiReconService = require('../services/openAiService');
 const path = require('path');
 const fs = require('fs');
 
@@ -118,8 +120,12 @@ const uploadAndIngest = async (req, res, next) => {
           ipAddress: req.ip
         });
 
-        // Trigger AI Match Pipeline
-        await ReconciliationEngine.runMatching(job._id);
+        // Trigger AI Match Pipeline via BullMQ Queue (with async fallback)
+        await addReconciliationJob({
+          jobId: job._id,
+          userId: req.user._id,
+          jobName
+        });
 
       } catch (err) {
         console.error('💥 Background Ingestion Pipeline Failed:', err);
@@ -258,10 +264,93 @@ const processInvoiceOCR = async (req, res, next) => {
   }
 };
 
+/**
+ * 6. AI LLM Transaction Comparison
+ * POST /api/reconciliation/ai-match
+ * Compares two transactions using OpenAI LLM or semantic NLP engine
+ */
+const aiCompareMatch = async (req, res, next) => {
+  try {
+    const { bankTxn, internalTxn } = req.body;
+
+    if (!bankTxn || !internalTxn) {
+      res.statusCode = 400;
+      return next(new Error('Please provide both bankTxn and internalTxn for comparison.'));
+    }
+
+    const comparison = await OpenAiReconService.compareTransactions(bankTxn, internalTxn);
+
+    res.json({
+      success: true,
+      comparison
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * 7. AI Executive Summary Generation
+ * GET /api/reconciliation/ai-summary/:jobId
+ * Generates an executive management briefing with AI narrative and key findings
+ */
+const getAiExecutiveSummary = async (req, res, next) => {
+  try {
+    const { jobId } = req.params;
+
+    const job = await ReconciliationJob.findById(jobId);
+    if (!job) {
+      res.statusCode = 404;
+      return next(new Error('Reconciliation Job not found.'));
+    }
+
+    const matches = await ReconciliationMatch.find({ jobId }).populate('bankTransactionId internalTransactionId');
+    const transactions = await Transaction.find({ uploadJobId: jobId });
+    const fraudAlerts = FraudDetectorService.analyze(transactions);
+
+    const summary = await OpenAiReconService.generateExecutiveSummary(job, matches, fraudAlerts);
+
+    res.json({
+      success: true,
+      summary
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * 8. AI Anomaly / Fraud Explainer
+ * POST /api/reconciliation/ai-explain-anomaly
+ */
+const explainAiAnomaly = async (req, res, next) => {
+  try {
+    const { alert } = req.body;
+
+    if (!alert) {
+      res.statusCode = 400;
+      return next(new Error('Alert details required.'));
+    }
+
+    const explanation = OpenAiReconService.explainAnomaly(alert);
+
+    res.json({
+      success: true,
+      explanation
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   uploadAndIngest,
   getJobs,
   getMatchesByJob,
   resolveMatch,
-  processInvoiceOCR
+  processInvoiceOCR,
+  aiCompareMatch,
+  getAiExecutiveSummary,
+  explainAiAnomaly
 };
+

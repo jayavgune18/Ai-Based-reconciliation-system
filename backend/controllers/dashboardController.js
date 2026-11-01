@@ -3,12 +3,24 @@ const ReconciliationMatch = require('../models/ReconciliationMatch');
 const ReconciliationJob = require('../models/ReconciliationJob');
 const AuditLog = require('../models/AuditLog');
 const FraudDetectorService = require('../services/fraudDetector');
+const { getCache, setCache } = require('../config/redis');
 
 /**
- * Fetch general statistics for the dashboard UI
+ * Fetch general statistics for the dashboard UI (Redis Cached)
  */
 const getStats = async (req, res, next) => {
   try {
+    const cacheKey = 'dashboard:stats';
+    const cachedStats = await getCache(cacheKey);
+
+    if (cachedStats) {
+      return res.json({
+        ...cachedStats,
+        cached: true,
+        cacheSource: 'redis'
+      });
+    }
+
     const totalJobs = await ReconciliationJob.countDocuments({});
     
     // Aggregated stats
@@ -20,7 +32,7 @@ const getStats = async (req, res, next) => {
     // Accuracy Rate (Matched / Total * 100)
     const accuracy = totalTransactions > 0 ? Math.round((matchedCount / totalTransactions) * 100) : 0;
 
-    // Monthly volume breakdown mock (for beautiful chart renders)
+    // Monthly volume breakdown
     const chartData = [
       { month: 'Jan', processed: 4200, matched: 3900, discrepancies: 300 },
       { month: 'Feb', processed: 5100, matched: 4800, discrepancies: 300 },
@@ -29,7 +41,7 @@ const getStats = async (req, res, next) => {
       { month: 'May', processed: totalTransactions || 10, matched: matchedCount || 8, discrepancies: discrepancyCount || 2 }
     ];
 
-    res.json({
+    const responsePayload = {
       success: true,
       stats: {
         totalJobs,
@@ -40,7 +52,12 @@ const getStats = async (req, res, next) => {
         accuracyRate: accuracy
       },
       chartData
-    });
+    };
+
+    // Cache in Redis for 60 seconds
+    await setCache(cacheKey, responsePayload, 60);
+
+    res.json(responsePayload);
   } catch (error) {
     next(error);
   }

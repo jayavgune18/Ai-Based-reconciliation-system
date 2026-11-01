@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../services/api';
 import { 
-  FileSpreadsheet, Upload, Download, CheckCircle, AlertTriangle, HelpCircle, FileText, Plus, X, Play
+  FileSpreadsheet, Upload, Download, CheckCircle, AlertTriangle, HelpCircle, FileText, Plus, X, Play,
+  Sparkles, CheckCheck, Check, Brain, ShieldAlert, ArrowRightLeft
 } from 'lucide-react';
 
 export const ReconciliationWorkbench = () => {
@@ -30,6 +31,17 @@ export const ReconciliationWorkbench = () => {
   const [invoiceFile, setInvoiceFile] = useState(null);
   const [ocrResult, setOcrResult] = useState(null);
   const [ocrRunning, setOcrRunning] = useState(false);
+
+  // AI Executive Summary state
+  const [aiSummaryModalOpen, setAiSummaryModalOpen] = useState(false);
+  const [aiSummary, setAiSummary] = useState(null);
+  const [loadingAiSummary, setLoadingAiSummary] = useState(false);
+
+  // AI Deep-dive Explain state
+  const [aiExplainModalOpen, setAiExplainModalOpen] = useState(false);
+  const [aiExplainResult, setAiExplainResult] = useState(null);
+  const [loadingAiExplain, setLoadingAiExplain] = useState(false);
+  const [activeExplainMatch, setActiveExplainMatch] = useState(null);
 
   // Fetch jobs list
   const fetchJobs = async () => {
@@ -171,6 +183,47 @@ export const ReconciliationWorkbench = () => {
     }
   };
 
+  // Fetch AI Executive Summary for the selected audit job
+  const handleFetchAiSummary = async () => {
+    if (!selectedJobId) return;
+    setLoadingAiSummary(true);
+    setAiSummary(null);
+    setAiSummaryModalOpen(true);
+    try {
+      const res = await apiClient.get(`/api/reconciliation/ai-summary/${selectedJobId}`);
+      if (res.data.success) {
+        setAiSummary(res.data.summary);
+      }
+    } catch (err) {
+      console.error('Failed to load AI summary:', err);
+      alert('Failed to generate AI executive briefing: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoadingAiSummary(false);
+    }
+  };
+
+  // Open AI deep-dive comparison on a specific match
+  const handleOpenAiExplain = async (match) => {
+    setActiveExplainMatch(match);
+    setAiExplainResult(null);
+    setAiExplainModalOpen(true);
+    setLoadingAiExplain(true);
+    try {
+      const res = await apiClient.post('/api/reconciliation/ai-match', {
+        bankTxn: match.bankTransactionId,
+        internalTxn: match.internalTransactionId
+      });
+      if (res.data.success) {
+        setAiExplainResult(res.data.comparison);
+      }
+    } catch (err) {
+      console.error('Failed to explain match with AI:', err);
+    } finally {
+      setLoadingAiExplain(false);
+    }
+  };
+
+
   const resetUploadForm = () => {
     setJobName('');
     setBankFile(null);
@@ -221,6 +274,15 @@ export const ReconciliationWorkbench = () => {
 
         <div className="flex flex-wrap gap-2">
           
+          <button 
+            onClick={handleFetchAiSummary}
+            disabled={loadingAiSummary || !selectedJobId}
+            className="px-3.5 py-1.5 bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-xs rounded-lg tracking-wider uppercase flex items-center gap-1.5 shadow-md shadow-violet-500/20 transition disabled:opacity-50"
+          >
+            <Sparkles size={14} className={loadingAiSummary ? 'animate-spin' : ''} />
+            <span>{loadingAiSummary ? 'Generating AI Briefing...' : 'AI Executive Briefing'}</span>
+          </button>
+
           <button 
             onClick={() => setOcrModalOpen(true)}
             className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold text-xs rounded-lg tracking-wider uppercase flex items-center gap-1.5 transition"
@@ -330,7 +392,16 @@ export const ReconciliationWorkbench = () => {
                       <h4 className="font-black text-sm text-slate-900 dark:text-white">${Math.abs(amount).toFixed(2)}</h4>
                     </div>
                     
-                    <div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleOpenAiExplain(match)}
+                        className="px-2.5 py-1.5 rounded-lg border border-violet-200 dark:border-violet-800 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/40 text-xs font-bold transition flex items-center gap-1 group shadow-sm"
+                        title="AI Forensic Match Breakdown"
+                      >
+                        <Sparkles size={13} className="text-violet-500 group-hover:scale-110 transition-transform" />
+                        <span className="text-[11px]">AI Explain</span>
+                      </button>
+
                       {match.status === 'pending_review' ? (
                         <button
                           onClick={() => setResolutionTarget(match)}
@@ -427,7 +498,212 @@ export const ReconciliationWorkbench = () => {
         </div>
       )}
 
-      {/* Resolution Override Popup */}
+      {/* AI Executive Summary Modal */}
+      {aiSummaryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-fade-in overflow-y-auto">
+          <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-8">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 p-6 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                  <Sparkles size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-extrabold flex items-center gap-2">
+                    AI Reconciliation Briefing
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-white/25 uppercase tracking-wider">
+                      Executive Report
+                    </span>
+                  </h3>
+                  <p className="text-xs text-violet-200 mt-0.5">
+                    Forensic summary generated by Neural LLM Reconciliation Engine
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setAiSummaryModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+              {loadingAiSummary ? (
+                <div className="py-12 flex flex-col items-center justify-center gap-3 text-slate-400">
+                  <Brain size={36} className="animate-pulse text-violet-500" />
+                  <p className="text-xs font-bold uppercase tracking-wider">Synthesizing Transaction Intelligence...</p>
+                </div>
+              ) : aiSummary ? (
+                <div className="space-y-5">
+                  {/* Key KPIs */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="p-3.5 rounded-xl bg-violet-50 dark:bg-violet-950/30 border border-violet-100 dark:border-violet-900/40">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Accuracy Rate</span>
+                      <span className="text-2xl font-black text-violet-600 dark:text-violet-400">{aiSummary.accuracyRate}%</span>
+                    </div>
+                    <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Matched Pairs</span>
+                      <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{aiSummary.matchedPairs}</span>
+                    </div>
+                    <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/40">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Discrepancies</span>
+                      <span className="text-2xl font-black text-amber-600 dark:text-amber-400">{aiSummary.discrepancyCount}</span>
+                    </div>
+                    <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/40">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Risk Signals</span>
+                      <span className="text-2xl font-black text-rose-600 dark:text-rose-400">{aiSummary.fraudAlertsCount}</span>
+                    </div>
+                  </div>
+
+                  {/* Narrative Summary */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+                      <Brain size={14} className="text-violet-500" />
+                      Executive Narrative
+                    </h4>
+                    <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+                      {aiSummary.narrativeSummary}
+                    </p>
+                  </div>
+
+                  {/* Key Audit Findings */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Key Audit Findings</h4>
+                    <div className="space-y-1.5">
+                      {aiSummary.keyFindings?.map((finding, idx) => (
+                        <div key={idx} className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300">
+                          <CheckCircle className="text-emerald-500 shrink-0 mt-0.5" size={15} />
+                          <span>{finding}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* CFO Recommendations */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Recommended Next Steps</h4>
+                    <div className="space-y-1.5">
+                      {aiSummary.recommendations?.map((rec, idx) => (
+                        <div key={idx} className="flex items-start gap-2.5 p-3 rounded-xl bg-violet-50/50 dark:bg-violet-950/20 border border-violet-200/60 dark:border-violet-900/40 text-xs text-violet-900 dark:text-violet-200">
+                          <span className="w-4 h-4 rounded-full bg-violet-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">{idx + 1}</span>
+                          <span>{rec}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
+              <span>Audited under Dual-Ledger AI Protocol</span>
+              <button 
+                onClick={() => setAiSummaryModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100"
+              >
+                Close Briefing
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Forensic Explain Deep-Dive Modal */}
+      {aiExplainModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-fade-in overflow-y-auto">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-8">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-violet-600 to-indigo-600 p-5 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <Brain size={20} />
+                <h3 className="font-extrabold text-base">AI Forensic Match Reasoning</h3>
+              </div>
+              <button 
+                onClick={() => setAiExplainModalOpen(false)}
+                className="text-white/80 hover:text-white"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-5 space-y-4">
+              {loadingAiExplain ? (
+                <div className="py-10 flex flex-col items-center justify-center gap-2 text-slate-400 text-xs">
+                  <Sparkles size={28} className="animate-spin text-violet-500" />
+                  <span>Evaluating semantic distance and timing vectors...</span>
+                </div>
+              ) : aiExplainResult ? (
+                <div className="space-y-4">
+                  {/* Score & Action Row */}
+                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-900/40">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Match Confidence</span>
+                      <span className="text-2xl font-black text-violet-600 dark:text-violet-400">{aiExplainResult.confidenceScore}%</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block">AI Recommendation</span>
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
+                        aiExplainResult.recommendedAction === 'APPROVE' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400' :
+                        aiExplainResult.recommendedAction === 'REVIEW_REQUIRED' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400' :
+                        'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400'
+                      }`}>
+                        {aiExplainResult.recommendedAction}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Item Comparison */}
+                  <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-xs">
+                    <div>
+                      <span className="text-slate-400 font-bold uppercase text-[10px] block">Bank Feed Item</span>
+                      <p className="font-bold text-slate-800 dark:text-slate-100 mt-0.5">{activeExplainMatch?.bankTransactionId?.description || 'N/A'}</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">₹{activeExplainMatch?.bankTransactionId?.amount?.toLocaleString('en-IN')}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-slate-400 font-bold uppercase text-[10px] block">Company Ledger</span>
+                      <p className="font-bold text-slate-800 dark:text-slate-100 mt-0.5">{activeExplainMatch?.internalTransactionId?.description || 'N/A'}</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">₹{activeExplainMatch?.internalTransactionId?.amount?.toLocaleString('en-IN')}</p>
+                    </div>
+                  </div>
+
+                  {/* AI Reasoning */}
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 text-xs space-y-1">
+                    <span className="font-bold text-slate-400 uppercase text-[10px] block">Forensic Auditor Rationale</span>
+                    <p className="text-slate-700 dark:text-slate-200 leading-relaxed">{aiExplainResult.reasoning}</p>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <button 
+                onClick={() => setAiExplainModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100"
+              >
+                Close
+              </button>
+              {activeExplainMatch?.status === 'pending_review' && (
+                <button
+                  onClick={() => {
+                    setAiExplainModalOpen(false);
+                    setResolutionTarget(activeExplainMatch);
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md flex items-center gap-1.5"
+                >
+                  <Check size={14} />
+                  <span>Approve Match</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {resolutionTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 relative">
