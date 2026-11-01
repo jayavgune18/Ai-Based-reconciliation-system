@@ -10,9 +10,12 @@ const {
   resumeSubscription,
   getBillingHistory,
   downloadInvoicePdf,
-  handleSubscriptionWebhook
+  handleSubscriptionWebhook,
+  confirmUpiPayment,
+  scanPaymentReceipt
 } = require('../controllers/subscriptionController');
 const { protect } = require('../middlewares/authMiddleware');
+const { receiptUpload, handleReceiptUpload } = require('../middlewares/uploadMiddleware');
 
 // ── Public Routes ──
 // Get available plans with pricing & feature comparison
@@ -39,6 +42,12 @@ router.post('/cancel', protect, cancelSubscription);
 
 // Resume auto-renewal before period end
 router.post('/resume', protect, resumeSubscription);
+
+// Confirm UPI manual payment with UTR reference number
+router.post('/confirm-upi', protect, confirmUpiPayment);
+
+// OCR / Camera Scanner for Payment Screenshot / Receipt (extracts UTR)
+router.post('/scan-receipt', protect, handleReceiptUpload(receiptUpload.single('receipt')), scanPaymentReceipt);
 
 // Billing history & invoices list
 router.get('/invoices', protect, getBillingHistory);

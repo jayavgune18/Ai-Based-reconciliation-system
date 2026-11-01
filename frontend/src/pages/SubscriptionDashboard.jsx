@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   CreditCard,
@@ -19,7 +19,20 @@ import {
   AlertTriangle,
   ChevronDown,
   Printer,
-  X
+  X,
+  QrCode,
+  Smartphone,
+  Copy,
+  CheckCheck,
+  Timer,
+  IndianRupee,
+  Wallet,
+  Camera,
+  ScanLine,
+  UploadCloud,
+  Check,
+  Image as ImageIcon,
+  Sparkle
 } from 'lucide-react';
 import {
   loadRazorpayScript,
@@ -30,7 +43,9 @@ import {
   cancelSubscription,
   resumeSubscription,
   fetchBillingHistory,
-  downloadInvoicePdf
+  downloadInvoicePdf,
+  confirmUpiPayment,
+  scanPaymentReceipt
 } from '../services/subscriptionService';
 
 export const SubscriptionDashboard = () => {
@@ -55,11 +70,143 @@ export const SubscriptionDashboard = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('Too expensive for current volume');
 
+  // Payment Method Selection Modal State
+  const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
+  const [pendingPlanId, setPendingPlanId] = useState(null);
+
+  // UPI QR Modal State
+  const [showUpiModal, setShowUpiModal] = useState(false);
+  const [upiPlanData, setUpiPlanData] = useState(null); // { planId, planName, amount, orderId }
+  const [utrInput, setUtrInput] = useState('');
+  const [upiLoading, setUpiLoading] = useState(false);
+  const [upiInitLoading, setUpiInitLoading] = useState(false);
+  const [upiTimer, setUpiTimer] = useState(900); // 15 min countdown in seconds
+  const [upiCopied, setUpiCopied] = useState(false);
+  const upiTimerRef = useRef(null);
+
+  // Scanner state in UPI modal
+  const [upiScannerOpen, setUpiScannerOpen] = useState(false);
+  const [upiScannerMode, setUpiScannerMode] = useState('upload'); // 'upload' | 'camera'
+  const [upiScanning, setUpiScanning] = useState(false);
+  const [upiScanResult, setUpiScanResult] = useState(null);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  // UPI Merchant Details (customizable)
+  const UPI_VPA = 'reconcileai@upi'; // Replace with actual UPI VPA
+  const UPI_MERCHANT_NAME = 'AI Reconciliation System';
+
   // Load plans & current subscription
   useEffect(() => {
     loadDashboardData();
     loadInvoices();
   }, []);
+
+  // Cleanup UPI timer & camera on unmount
+  useEffect(() => {
+    return () => { 
+      if (upiTimerRef.current) clearInterval(upiTimerRef.current);
+      stopCamera();
+    };
+  }, []);
+
+  const startCamera = async () => {
+    setCameraError(null);
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+        }
+        setCameraActive(true);
+      } else {
+        setCameraError('Camera access not supported on this device/browser.');
+      }
+    } catch (err) {
+      console.warn('Camera access denied or failed:', err);
+      setCameraError('Camera access permission denied or unavailable. You can upload a payment screenshot instead.');
+      setCameraActive(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const tracks = videoRef.current.srcObject.getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    setCameraActive(false);
+  };
+
+  const captureCameraFrame = async () => {
+    if (!videoRef.current || !canvasRef.current) return;
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const base64 = canvas.toDataURL('image/jpeg', 0.85);
+
+    stopCamera();
+    await processReceiptScan({ imageBase64: base64, expectedAmount: upiPlanData?.amount });
+  };
+
+  const handleReceiptFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('receipt', file);
+    if (upiPlanData?.amount) {
+      formData.append('expectedAmount', upiPlanData.amount);
+    }
+    await processReceiptScan(formData);
+  };
+
+  const processReceiptScan = async (payload) => {
+    setUpiScanning(true);
+    setUpiScanResult(null);
+    try {
+      const res = await scanPaymentReceipt(payload);
+      if (res.success && res.data) {
+        setUpiScanResult(res.data);
+        if (res.data.utrNumber) {
+          setUtrInput(res.data.utrNumber);
+        }
+      }
+    } catch (err) {
+      console.error('Scan error:', err);
+      alert('Scanning error: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setUpiScanning(false);
+    }
+  };
+
+  const handleTestPresetScan = async (presetApp) => {
+    const dummyPresets = {
+      PhonePe: {
+        rawText: `PhonePe Transaction Successful. Paid to: AI Reconciliation System (reconcileai@upi). UTR No: 428${Math.floor(100000000 + Math.random() * 900000000)}. Amount: Rs. ${upiPlanData?.amount || 2499}. Bank Ref: 428317293841`,
+        expectedAmount: upiPlanData?.amount || 2499
+      },
+      GPay: {
+        rawText: `Google Pay Payment completed. Recipient: reconcileai@upi. UPI transaction ID: 502${Math.floor(100000000 + Math.random() * 900000000)}. Google transaction ID: CICAgICQ5-G7FA. Amount: INR ${upiPlanData?.amount || 2499}`,
+        expectedAmount: upiPlanData?.amount || 2499
+      },
+      Paytm: {
+        rawText: `Paytm Payments Bank. Money sent successfully to AI Reconciliation System. UPI Ref No (UTR): 312${Math.floor(100000000 + Math.random() * 900000000)}. Amount: Rs ${upiPlanData?.amount || 2499}`,
+        expectedAmount: upiPlanData?.amount || 2499
+      }
+    };
+
+    const chosen = dummyPresets[presetApp] || dummyPresets.PhonePe;
+    await processReceiptScan(chosen);
+  };
 
   const loadDashboardData = async () => {
     try {
@@ -108,11 +255,10 @@ export const SubscriptionDashboard = () => {
   }, [statusFilter]);
 
   /**
-   * Razorpay Checkout Handler
+   * Plan Selection - Show payment method picker
    */
-  const handleSelectPlan = async (planId) => {
+  const handleSelectPlan = (planId) => {
     if (planId === 'free') {
-      // Downgrading to free tier
       if (window.confirm('Downgrading to Free tier will cancel your recurring plan at the end of the billing period. Proceed?')) {
         handleCancelSubscription('Downgraded to Free Starter');
       }
@@ -124,6 +270,15 @@ export const SubscriptionDashboard = () => {
       return;
     }
 
+    setPendingPlanId(planId);
+    setShowPaymentMethodModal(true);
+  };
+
+  /**
+   * Razorpay Checkout Handler
+   */
+  const handleRazorpayCheckout = async (planId) => {
+    setShowPaymentMethodModal(false);
     setActionLoading(true);
     setStatusMessage({ type: 'info', text: 'Initializing secure Razorpay Checkout session...' });
 
@@ -274,6 +429,118 @@ export const SubscriptionDashboard = () => {
   };
 
   /**
+   * UPI QR Code Checkout Handler
+   */
+  const handleUpiCheckout = async (planId) => {
+    setShowPaymentMethodModal(false);
+    setUpiInitLoading(true);
+    setStatusMessage({ type: 'info', text: 'Generating UPI payment order...' });
+
+    try {
+      const session = await createCheckoutSession({
+        planId,
+        cycle: billingCycle,
+        customerDetails: {
+          name: user?.name,
+          email: user?.email,
+          contact: '9876543210'
+        }
+      });
+
+      const selectedPlan = plans.find(p => p.id === planId);
+      const price = billingCycle === 'yearly' ? selectedPlan?.yearlyPrice : selectedPlan?.monthlyPrice;
+
+      setUpiPlanData({
+        planId,
+        planName: session.planName || selectedPlan?.name,
+        amount: price || session.amountInPaise / 100,
+        orderId: session.orderId
+      });
+
+      // Start 15-minute countdown timer
+      setUpiTimer(900);
+      if (upiTimerRef.current) clearInterval(upiTimerRef.current);
+      upiTimerRef.current = setInterval(() => {
+        setUpiTimer(prev => {
+          if (prev <= 1) {
+            clearInterval(upiTimerRef.current);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      setUtrInput('');
+      setShowUpiModal(true);
+      setStatusMessage(null);
+    } catch (err) {
+      console.error('UPI init error:', err);
+      setStatusMessage({
+        type: 'error',
+        text: err.response?.data?.message || 'Failed to generate UPI payment order.'
+      });
+    } finally {
+      setUpiInitLoading(false);
+    }
+  };
+
+  /**
+   * Confirm UPI Payment with UTR
+   */
+  const handleConfirmUpiPayment = async () => {
+    const trimmedUtr = utrInput.trim();
+    if (!trimmedUtr || trimmedUtr.length < 10) {
+      alert('Please enter a valid UTR / UPI Reference number (minimum 10 characters).');
+      return;
+    }
+
+    setUpiLoading(true);
+    try {
+      const res = await confirmUpiPayment({
+        orderId: upiPlanData.orderId,
+        planId: upiPlanData.planId,
+        cycle: billingCycle,
+        utrNumber: trimmedUtr,
+        amount: upiPlanData.amount,
+        customerDetails: { name: user?.name, email: user?.email }
+      });
+
+      if (res.success) {
+        clearInterval(upiTimerRef.current);
+        setShowUpiModal(false);
+        setUpiPlanData(null);
+        setStatusMessage({
+          type: 'success',
+          text: res.message || '✅ UPI payment submitted! Your plan will activate after verification (typically within 30 minutes).'
+        });
+        await loadDashboardData();
+        await loadInvoices();
+      } else {
+        throw new Error(res.message || 'UPI confirmation failed.');
+      }
+    } catch (err) {
+      setStatusMessage({
+        type: 'error',
+        text: err.response?.data?.message || err.message || 'Failed to confirm UPI payment.'
+      });
+    } finally {
+      setUpiLoading(false);
+    }
+  };
+
+  const formatUpiTimer = (seconds) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
+  const getUpiQrUrl = () => {
+    if (!upiPlanData) return '';
+    const upiLink = `upi://pay?pa=${UPI_VPA}&pn=${encodeURIComponent(UPI_MERCHANT_NAME)}&am=${upiPlanData.amount}&cu=INR&tn=${encodeURIComponent(`${upiPlanData.planName} Subscription - ${upiPlanData.orderId}`)}`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiLink)}&color=0f172a&bgcolor=ffffff&qzone=2&format=png`;
+  };
+
+  /**
    * Cancel Subscription
    */
   const handleCancelSubscription = async (reason) => {
@@ -338,7 +605,8 @@ export const SubscriptionDashboard = () => {
   };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-12">
+    <>
+      <div className="space-y-8 max-w-7xl mx-auto pb-12">
       {/* ── HEADER & BREADCRUMBS ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
         <div>
@@ -722,7 +990,7 @@ export const SubscriptionDashboard = () => {
                           : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100'
                       }`}
                     >
-                      {actionLoading ? (
+                      {actionLoading || upiInitLoading ? (
                         <>
                           <RefreshCw size={14} className="animate-spin" />
                           <span>Processing...</span>
@@ -1018,5 +1286,484 @@ export const SubscriptionDashboard = () => {
         </div>
       )}
     </div>
+
+      {/* ── PAYMENT METHOD SELECTOR MODAL ── */}
+      {showPaymentMethodModal && pendingPlanId && (() => {
+        const selPlan = plans.find(p => p.id === pendingPlanId);
+        const price = billingCycle === 'yearly' ? selPlan?.yearlyPrice : selPlan?.monthlyPrice;
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">Choose Payment Method</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {selPlan?.name} &mdash; Rs.&nbsp;{price?.toLocaleString('en-IN')} / {billingCycle}
+                  </p>
+                </div>
+                <button
+                  onClick={() => { setShowPaymentMethodModal(false); setPendingPlanId(null); }}
+                  className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {/* Razorpay Option */}
+                <button
+                  id="btn-razorpay-checkout"
+                  onClick={() => handleRazorpayCheckout(pendingPlanId)}
+                  className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-cyan-500 dark:hover:border-cyan-500 hover:bg-cyan-50/50 dark:hover:bg-cyan-950/30 transition-all group text-left"
+                >
+                  <div className="w-11 h-11 rounded-full bg-cyan-100 dark:bg-cyan-950/60 flex items-center justify-center shrink-0 group-hover:bg-cyan-200 dark:group-hover:bg-cyan-900/60 transition-colors">
+                    <CreditCard className="text-cyan-600 dark:text-cyan-400" size={22} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-sm text-slate-900 dark:text-white">Razorpay Secure Checkout</p>
+                    <p className="text-xs text-slate-500 mt-0.5">Cards, Net Banking, Wallets, UPI — instant activation</p>
+                  </div>
+                  <ArrowRight size={18} className="text-slate-400 group-hover:text-cyan-500 transition-colors" />
+                </button>
+
+                {/* UPI QR Option */}
+                <button
+                  id="btn-upi-qr-checkout"
+                  onClick={() => handleUpiCheckout(pendingPlanId)}
+                  className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-violet-500 dark:hover:border-violet-500 hover:bg-violet-50/50 dark:hover:bg-violet-950/30 transition-all group text-left"
+                >
+                  <div className="w-11 h-11 rounded-full bg-violet-100 dark:bg-violet-950/60 flex items-center justify-center shrink-0 group-hover:bg-violet-200 dark:group-hover:bg-violet-900/60 transition-colors">
+                    <QrCode className="text-violet-600 dark:text-violet-400" size={22} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-sm text-slate-900 dark:text-white">Pay via UPI QR Code</p>
+                    <p className="text-xs text-slate-500 mt-0.5">Scan QR with any UPI app — GPay, PhonePe, Paytm</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700">
+                      MANUAL
+                    </span>
+                    <ArrowRight size={18} className="text-slate-400 group-hover:text-violet-500 transition-colors" />
+                  </div>
+                </button>
+              </div>
+
+              <p className="text-[11px] text-slate-400 dark:text-slate-600 mt-4 text-center">
+                <ShieldCheck size={11} className="inline mr-1 text-emerald-500" />
+                All transactions are secured with 256-bit SSL encryption.
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── UPI QR CODE PAYMENT MODAL ── */}
+      {showUpiModal && upiPlanData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+
+            {/* Header gradient bar */}
+            <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 p-5 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <QrCode size={22} />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-lg leading-tight">UPI QR Payment</h3>
+                    <p className="text-xs text-violet-200">{upiPlanData.planName} &mdash; {billingCycle}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setShowUpiModal(false); clearInterval(upiTimerRef.current); }}
+                  className="text-white/70 hover:text-white transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Amount + Timer row */}
+              <div className="mt-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-violet-200 mb-0.5">Amount to Pay</p>
+                  <div className="flex items-baseline gap-1">
+                    <IndianRupee size={18} className="text-white" />
+                    <span className="text-3xl font-extrabold">{upiPlanData.amount.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-xl ${
+                  upiTimer < 120 ? 'bg-rose-500/30 border border-rose-400/40' : 'bg-white/15 border border-white/20'
+                }`}>
+                  <Timer size={16} className={upiTimer < 120 ? 'text-rose-200 animate-pulse' : 'text-violet-200'} />
+                  <div className="text-right">
+                    <p className="text-[10px] text-violet-200">Expires in</p>
+                    <p className={`font-mono font-bold text-sm ${
+                      upiTimer < 120 ? 'text-rose-200' : 'text-white'
+                    }`}>{formatUpiTimer(upiTimer)}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-5 space-y-5">
+              {/* QR Code + Instructions */}
+              <div className="flex flex-col sm:flex-row gap-5 items-center">
+                {/* QR Code */}
+                <div className="flex-shrink-0">
+                  <div className="w-[180px] h-[180px] bg-white rounded-2xl border-4 border-violet-100 dark:border-violet-900/60 shadow-lg flex items-center justify-center overflow-hidden p-2">
+                    {upiTimer > 0 ? (
+                      <img
+                        src={getUpiQrUrl()}
+                        alt="UPI Payment QR Code"
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.parentNode.innerHTML = '<div class="flex flex-col items-center justify-center gap-2 text-slate-400"><svg xmlns=\'http://www.w3.org/2000/svg\' width=\'40\' height=\'40\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\'><rect width=\'5\' height=\'5\' x=\'3\' y=\'3\' rx=\'1\'/><rect width=\'5\' height=\'5\' x=\'16\' y=\'3\' rx=\'1\'/><rect width=\'5\' height=\'5\' x=\'3\' y=\'16\' rx=\'1\'/><path d=\'M21 16h-3a2 2 0 0 0-2 2v3\'/><path d=\'M21 21v.01\'/><path d=\'M12 7v3a2 2 0 0 1-2 2H7\'/><path d=\'M3 12h.01\'/><path d=\'M12 3h.01\'/><path d=\'M12 16v.01\'/><path d=\'M16 12h1\'/><path d=\'M21 12v.01\'/><path d=\'M12 21v-1\'/></svg><p class=\'text-xs text-center px-2\'>Scan with any UPI app</p></div>';
+                        }}
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-slate-400">
+                        <XCircle size={36} className="text-rose-400" />
+                        <p className="text-xs text-center text-rose-500 font-semibold">QR Expired</p>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-center text-[11px] text-slate-500 mt-2">Scan with any UPI App</p>
+                </div>
+
+                {/* App logos + Steps */}
+                <div className="flex-1 space-y-3 w-full">
+                  {/* Accepted apps */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {['GPay', 'PhonePe', 'Paytm', 'BHIM'].map(app => (
+                      <span key={app} className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">{app}</span>
+                    ))}
+                  </div>
+
+                  <div className="space-y-2 text-xs text-slate-600 dark:text-slate-300">
+                    <div className="flex items-start gap-2">
+                      <span className="w-5 h-5 rounded-full bg-violet-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0">1</span>
+                      <span>Open your UPI app and tap <strong>Scan QR</strong></span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="w-5 h-5 rounded-full bg-violet-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0">2</span>
+                      <span>Scan the QR code and pay <strong>Rs.&nbsp;{upiPlanData.amount.toLocaleString('en-IN')}</strong></span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="w-5 h-5 rounded-full bg-violet-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0">3</span>
+                      <span>Copy the <strong>UTR / Reference number</strong> from your app</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="w-5 h-5 rounded-full bg-violet-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0">4</span>
+                      <span>Paste it below and click <strong>Confirm Payment</strong></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* UPI VPA display */}
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mb-0.5">Pay to UPI ID</p>
+                    <p className="font-mono font-bold text-sm text-slate-900 dark:text-white">{UPI_VPA}</p>
+                    <p className="text-[11px] text-slate-500">{UPI_MERCHANT_NAME}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(UPI_VPA);
+                      setUpiCopied(true);
+                      setTimeout(() => setUpiCopied(false), 2000);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"
+                  >
+                    {upiCopied ? <CheckCheck size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                    {upiCopied ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+                <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-[11px] text-slate-500">
+                  <span>Order Ref:</span>
+                  <span className="font-mono text-slate-700 dark:text-slate-300 truncate ml-2">{upiPlanData.orderId}</span>
+                </div>
+              </div>
+
+              {/* ── AI PAYMENT SCANNER (Screenshot OCR & Live Camera) ── */}
+              <div className="rounded-2xl border border-violet-200 dark:border-violet-900/60 bg-violet-50/50 dark:bg-violet-950/20 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-violet-600 text-white flex items-center justify-center">
+                      <ScanLine size={16} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        AI Payment Scanner
+                        <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-gradient-to-r from-violet-600 to-indigo-600 text-white uppercase tracking-wider">
+                          Auto-Fill UTR
+                        </span>
+                      </h4>
+                      <p className="text-[11px] text-slate-500">Scan payment screenshot or receipt without manual typing</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUpiScannerOpen(prev => !prev);
+                      if (cameraActive) stopCamera();
+                    }}
+                    className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-800/50 transition-colors"
+                  >
+                    {upiScannerOpen ? 'Hide Scanner' : 'Open Scanner'}
+                  </button>
+                </div>
+
+                {upiScannerOpen && (
+                  <div className="pt-2 border-t border-violet-200/60 dark:border-violet-900/40 space-y-3">
+                    {/* Mode Tabs */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUpiScannerMode('upload');
+                          if (cameraActive) stopCamera();
+                        }}
+                        className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all ${
+                          upiScannerMode === 'upload'
+                            ? 'bg-violet-600 text-white font-bold shadow-sm'
+                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                        }`}
+                      >
+                        <UploadCloud size={14} />
+                        <span>Upload Screenshot</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUpiScannerMode('camera');
+                          startCamera();
+                        }}
+                        className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all ${
+                          upiScannerMode === 'camera'
+                            ? 'bg-violet-600 text-white font-bold shadow-sm'
+                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                        }`}
+                      >
+                        <Camera size={14} />
+                        <span>Camera Scanner</span>
+                      </button>
+                    </div>
+
+                    {/* Mode 1: File Upload */}
+                    {upiScannerMode === 'upload' && (
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        className="border-2 border-dashed border-violet-300 dark:border-violet-800/80 hover:border-violet-500 rounded-xl p-4 text-center cursor-pointer bg-white/60 dark:bg-slate-900/60 transition-all hover:bg-violet-50 dark:hover:bg-violet-950/30 group"
+                      >
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*,.pdf"
+                          onChange={handleReceiptFileChange}
+                          className="hidden"
+                        />
+                        <div className="w-10 h-10 rounded-full bg-violet-100 dark:bg-violet-950/60 flex items-center justify-center mx-auto mb-2 text-violet-600 dark:text-violet-400 group-hover:scale-110 transition-transform">
+                          <ImageIcon size={20} />
+                        </div>
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          Click or drag payment screenshot here
+                        </p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          Supports GPay, PhonePe, Paytm, BHIM, Bank SMS screenshot (.jpg, .png, .pdf)
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Mode 2: Camera Scanner */}
+                    {upiScannerMode === 'camera' && (
+                      <div className="space-y-2">
+                        {cameraError ? (
+                          <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-xs">
+                            <p>{cameraError}</p>
+                            <button
+                              type="button"
+                              onClick={() => setUpiScannerMode('upload')}
+                              className="mt-2 text-xs font-bold text-amber-800 dark:text-amber-200 underline"
+                            >
+                              Switch to File Upload
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="relative rounded-xl overflow-hidden bg-slate-950 aspect-video max-h-52 flex items-center justify-center border-2 border-violet-500/50 shadow-inner">
+                            <video
+                              ref={videoRef}
+                              autoPlay
+                              playsInline
+                              muted
+                              className="w-full h-full object-cover"
+                            />
+                            {/* Scanner Reticle Overlay */}
+                            <div className="absolute inset-4 border-2 border-dashed border-cyan-400/70 rounded-xl pointer-events-none flex flex-col justify-between p-2">
+                              <div className="flex justify-between text-[10px] font-mono text-cyan-300 bg-slate-950/60 px-1.5 py-0.5 rounded self-start">
+                                [SCANNING RECEIPT]
+                              </div>
+                              {/* Laser sweep animation line */}
+                              <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_8px_#22d3ee] animate-pulse" />
+                              <div className="text-[10px] text-center text-slate-200 bg-slate-950/70 px-2 py-0.5 rounded self-center backdrop-blur-sm">
+                                Align UTR / Reference number inside frame
+                              </div>
+                            </div>
+                            <canvas ref={canvasRef} className="hidden" />
+                          </div>
+                        )}
+
+                        {cameraActive && !cameraError && (
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={captureCameraFrame}
+                              disabled={upiScanning}
+                              className="flex-1 py-2 rounded-xl text-xs font-bold bg-violet-600 hover:bg-violet-700 text-white shadow-md flex items-center justify-center gap-1.5 transition-colors"
+                            >
+                              <Camera size={14} />
+                              <span>Capture &amp; Auto-Extract</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={stopCamera}
+                              className="py-2 px-3 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 transition-colors"
+                            >
+                              Stop
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Quick Test Preset Buttons */}
+                    <div className="pt-2">
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold mb-1.5 flex items-center gap-1">
+                        <Sparkles size={11} className="text-violet-500" />
+                        Quick Test Simulators (1-Click Test):
+                      </p>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {['PhonePe', 'GPay', 'Paytm'].map((app) => (
+                          <button
+                            key={app}
+                            type="button"
+                            onClick={() => handleTestPresetScan(app)}
+                            disabled={upiScanning}
+                            className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-violet-500 hover:text-violet-600 transition-all flex items-center gap-1"
+                          >
+                            <span>Test {app} Slip</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Scanning Spinner */}
+                    {upiScanning && (
+                      <div className="p-3 rounded-xl bg-violet-100/80 dark:bg-violet-950/60 border border-violet-300 dark:border-violet-800 text-violet-800 dark:text-violet-200 text-xs flex items-center gap-2.5 animate-pulse">
+                        <RefreshCw size={15} className="animate-spin text-violet-600 dark:text-violet-400 shrink-0" />
+                        <span>AI OCR Engine analyzing payment receipt &amp; identifying 12-digit UTR...</span>
+                      </div>
+                    )}
+
+                    {/* Extraction Result Badge */}
+                    {upiScanResult && !upiScanning && (
+                      <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs space-y-1.5">
+                        <div className="flex items-center justify-between font-bold">
+                          <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-300">
+                            <CheckCircle2 size={15} className="text-emerald-500" />
+                            UTR Extracted Successfully!
+                          </span>
+                          <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-200 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300">
+                            {upiScanResult.confidenceRate}% Confidence
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
+                          <div>
+                            <span className="text-slate-400 block text-[10px] font-sans">Detected UTR:</span>
+                            <span className="font-extrabold text-slate-900 dark:text-white bg-white/70 dark:bg-slate-800/80 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 inline-block">
+                              {upiScanResult.utrNumber}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[10px] font-sans">Detected App:</span>
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">
+                              {upiScanResult.appName}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-emerald-600 dark:text-emerald-400 pt-0.5">
+                          ✓ Auto-populated into UTR field below. Ready to confirm!
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* UTR Input */}
+              <div>
+                <label htmlFor="utr-input" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  UTR / UPI Reference Number *
+                </label>
+                <div className="relative">
+                  <input
+                    id="utr-input"
+                    type="text"
+                    value={utrInput}
+                    onChange={(e) => setUtrInput(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
+                    placeholder="e.g. 428317293456 or UPI123456789"
+                    maxLength={30}
+                    className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-mono focus:outline-none focus:border-violet-500 dark:focus:border-violet-400 placeholder-slate-400 transition-colors pr-10"
+                  />
+                  {utrInput && utrInput.length >= 10 && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 flex items-center">
+                      <CheckCircle2 size={18} />
+                    </div>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">Find your UTR in your UPI app under payment history or use the scanner above to auto-detect.</p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => { setShowUpiModal(false); clearInterval(upiTimerRef.current); }}
+                  className="flex-1 py-2.5 px-4 text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  id="btn-confirm-upi"
+                  onClick={handleConfirmUpiPayment}
+                  disabled={upiLoading || !utrInput.trim() || upiTimer === 0}
+                  className="flex-1 py-2.5 px-4 text-xs font-bold rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-md shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                >
+                  {upiLoading ? (
+                    <><RefreshCw size={14} className="animate-spin" /><span>Verifying...</span></>
+                  ) : (
+                    <><Wallet size={14} /><span>Confirm Payment</span></>
+                  )}
+                </button>
+              </div>
+
+              {upiTimer === 0 && (
+                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+                  <AlertTriangle size={14} className="shrink-0" />
+                  <span>QR code has expired. Please close and try again to generate a new payment order.</span>
+                </div>
+              )}
+
+              <p className="text-[11px] text-slate-400 text-center">
+                <ShieldCheck size={11} className="inline mr-1 text-emerald-500" />
+                Your plan activates after our team verifies the UTR (typically within 30 minutes).
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };

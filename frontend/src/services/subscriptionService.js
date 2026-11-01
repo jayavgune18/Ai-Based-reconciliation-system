@@ -95,6 +95,22 @@ export const fetchBillingHistory = async (params = {}) => {
 };
 
 /**
+ * Confirm UPI Manual Payment with UTR Reference Number
+ * Sends UTR to backend for admin verification and plan activation
+ */
+export const confirmUpiPayment = async ({ orderId, planId, cycle, utrNumber, amount, customerDetails }) => {
+  const response = await apiClient.post('/api/subscriptions/confirm-upi', {
+    orderId,
+    planId,
+    cycle,
+    utrNumber,
+    amount,
+    customerDetails
+  });
+  return response.data;
+};
+
+/**
  * Download official Tax Invoice PDF via Axios blob
  */
 export const downloadInvoicePdf = async (invoiceId, invoiceNumber) => {
@@ -116,3 +132,16 @@ export const downloadInvoicePdf = async (invoiceId, invoiceNumber) => {
   link.parentNode.removeChild(link);
   window.URL.revokeObjectURL(url);
 };
+
+/**
+ * Scan payment screenshot or slip to auto-extract UTR number
+ */
+export const scanPaymentReceipt = async (formDataOrData) => {
+  let config = {};
+  if (formDataOrData instanceof FormData) {
+    config = { headers: { 'Content-Type': 'multipart/form-data' } };
+  }
+  const response = await apiClient.post('/api/subscriptions/scan-receipt', formDataOrData, config);
+  return response.data;
+};
+

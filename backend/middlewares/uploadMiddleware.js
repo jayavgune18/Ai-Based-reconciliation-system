@@ -95,4 +95,68 @@ const handleUpload = (multerMiddleware) => {
   };
 };
 
-module.exports = { upload, handleUpload };
+// Allowed MIME types for receipt images & documents
+const allowedReceiptMimeTypes = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/jpg',
+  'application/pdf'
+];
+
+const allowedReceiptExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.pdf'];
+
+const receiptFileFilter = (req, file, cb) => {
+  const ext = path.extname(file.originalname).toLowerCase();
+  
+  if (!allowedReceiptExtensions.includes(ext)) {
+    const error = new Error('Invalid file type. Only image files (.jpg, .jpeg, .png, .webp) and PDF documents are supported for scanner!');
+    error.statusCode = 400;
+    return cb(error, false);
+  }
+
+  if (!allowedReceiptMimeTypes.includes(file.mimetype)) {
+    const error = new Error('Invalid file format. Please upload a clear photo or screenshot of your receipt/payment.');
+    error.statusCode = 400;
+    return cb(error, false);
+  }
+  
+  cb(null, true);
+};
+
+const receiptUpload = multer({
+  storage: storage,
+  fileFilter: receiptFileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB
+    files: 1
+  }
+});
+
+const handleReceiptUpload = (multerMiddleware) => {
+  return (req, res, next) => {
+    multerMiddleware(req, res, (err) => {
+      if (err) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({
+            success: false,
+            message: 'Receipt image too large. Maximum size is 10MB.'
+          });
+        }
+        return res.status(400).json({
+          success: false,
+          message: err.message || 'Failed to upload receipt image.'
+        });
+      }
+      next();
+    });
+  };
+};
+
+module.exports = { 
+  upload, 
+  handleUpload,
+  receiptUpload,
+  handleReceiptUpload
+};
+

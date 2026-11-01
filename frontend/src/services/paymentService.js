@@ -126,3 +126,24 @@ export const downloadReconciliationExcel = async () => {
   link.parentNode.removeChild(link);
   window.URL.revokeObjectURL(url);
 };
+
+/**
+ * Scan payment slip/receipt and cross-match against gateway ledger
+ */
+export const scanAndMatchReceipt = async (formDataOrData) => {
+  let config = {};
+  if (formDataOrData instanceof FormData) {
+    config = { headers: { 'Content-Type': 'multipart/form-data' } };
+  }
+  const response = await apiClient.post('/api/payment/reconcile/scan-receipt', formDataOrData, config);
+  return response.data;
+};
+
+/**
+ * Ingest scanned receipt into internal ledger
+ */
+export const ingestScannedReceipt = async (receiptData) => {
+  const response = await apiClient.post('/api/payment/reconcile/ingest-scanned', receiptData);
+  return response.data;
+};
+

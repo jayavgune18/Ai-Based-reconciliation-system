@@ -10,9 +10,12 @@ const {
   runReconciliation,
   getReconciliationReport,
   downloadPdfReport,
-  downloadExcelReport
+  downloadExcelReport,
+  scanAndMatchReceipt,
+  ingestScannedReceipt
 } = require('../controllers/paymentController');
 const { protect } = require('../middlewares/authMiddleware');
+const { receiptUpload, handleReceiptUpload } = require('../middlewares/uploadMiddleware');
 
 // ── Public Routes ──
 // Public configuration (returns only public key ID, never secret)
@@ -38,6 +41,12 @@ router.post('/reconcile', protect, runReconciliation);
 
 // Get current reconciliation status and stats
 router.get('/reconcile/report', protect, getReconciliationReport);
+
+// AI Payment Receipt / Slip Scanner and Matcher
+router.post('/reconcile/scan-receipt', protect, handleReceiptUpload(receiptUpload.single('receipt')), scanAndMatchReceipt);
+
+// Ingest Scanned Receipt into Ledger
+router.post('/reconcile/ingest-scanned', protect, ingestScannedReceipt);
 
 // Download Reconciliation PDF Report
 router.get('/reconcile/download-pdf', protect, downloadPdfReport);
